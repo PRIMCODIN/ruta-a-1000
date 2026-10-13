@@ -228,6 +228,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         const rows = await db.gamesFull(restat.slice(i, i + 100))
         await db.upsertGames(rows.map((r) => ({ ...r, stats: computeStats(r, buildPlies(r.pgn, r.analysis!)) })))
       }
+      if (restat.length) await store.reload() // «Mi apertura» ya puede usar las métricas nuevas
       patch({ total: reanalyze.length, done: 0 })
       for (const id of reanalyze) {
         if (cancelled.current) break
