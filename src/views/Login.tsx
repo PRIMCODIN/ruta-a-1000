@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { supabase } from '../lib/db'
+import { Logo } from '../components/ui'
 
 export default function Login() {
   const [mode, setMode] = useState<'in' | 'up'>('in')
@@ -26,11 +27,11 @@ export default function Login() {
 
   return (
     <div className="center-screen">
-      <form className="card stack" style={{ width: 'min(400px, 100%)', padding: 24 }} onSubmit={submit}>
-        <div className="brand" style={{ padding: 0 }}><span className="logo" />Ruta a 1000</div>
-        <div>
-          <h1 style={{ fontSize: 22 }}>{mode === 'in' ? 'Entra para seguir entrenando' : 'Crea tu cuenta'}</h1>
-          <p className="muted" style={{ margin: 0 }}>Tu progreso se guarda en tu cuenta y lo ves en cualquier dispositivo.</p>
+      <form className="card stack login" onSubmit={submit}>
+        <div className="brand"><Logo />Ruta a 1000</div>
+        <div className="stack tight">
+          <h1>{mode === 'in' ? 'Entra para seguir entrenando' : 'Crea tu cuenta'}</h1>
+          <p className="lead sec">Tu progreso se guarda en tu cuenta y lo ves en cualquier dispositivo.</p>
         </div>
         <label className="f" htmlFor="email">Email
           <input id="email" className="input" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />

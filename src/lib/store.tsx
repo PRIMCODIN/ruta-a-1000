@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { db, type Attempt, type Review, type Settings } from './db'
+import { setLook } from './look'
 import type { GameLite } from '../analysis/aggregate'
 import type { Puzzle } from '../analysis/core'
 
@@ -40,7 +41,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [puzzles, setPuzzles] = useState<StoredPuzzle[]>([])
   const [reviews, setReviews] = useState<Record<string, Review>>({})
   const [attempts, setAttempts] = useState<Attempt[]>([])
-  const [settings, setS] = useState<Settings>({ chesscom_username: null, last_sync_at: null })
+  const [settings, setS] = useState<Settings>({ chesscom_username: null, last_sync_at: null, prefs: null })
 
   const reload = useCallback(async () => {
     setError(null)
@@ -51,6 +52,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setReviews(Object.fromEntries(r.map((x) => [x.item_id, x])))
       setAttempts(a)
       setS(s)
+      const look = (s.prefs as { look?: unknown } | null | undefined)?.look
+      if (look && typeof look === 'object') setLook(look) // el aspecto viaja con la cuenta
     } catch (e) {
       setError((e as Error).message)
     } finally {

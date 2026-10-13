@@ -25,8 +25,8 @@ export function useSide() {
 export function SideSwitch({ side, onChange }: { side: 'w' | 'b'; onChange: (s: 'w' | 'b') => void }) {
   return (
     <div className="seg" role="group" aria-label="Color">
-      <button type="button" aria-pressed={side === 'w'} onClick={() => onChange('w')}><span className="sw" style={{ background: '#eef2f7' }} />Con blancas</button>
-      <button type="button" aria-pressed={side === 'b'} onClick={() => onChange('b')}><span className="sw" style={{ background: '#1b2233' }} />Con negras</button>
+      <button type="button" aria-pressed={side === 'w'} onClick={() => onChange('w')}><span className="sw w" aria-hidden="true" />Con blancas</button>
+      <button type="button" aria-pressed={side === 'b'} onClick={() => onChange('b')}><span className="sw b" aria-hidden="true" />Con negras</button>
     </div>
   )
 }

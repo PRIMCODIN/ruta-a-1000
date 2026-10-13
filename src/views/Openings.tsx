@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Chess } from 'chess.js'
 import Board from '../board/Board'
-import { Coach, Mastery, Progress } from '../components/ui'
+import { Coach, Progress } from '../components/ui'
+import { Status } from './Repertoire'
+import { ArrowLeft } from '@phosphor-icons/react'
 import { SideSwitch, getSide, useSide } from '../components/SideSwitch'
 import { es, START_FEN, tryMove } from '../lib/chess-utils'
 import { useStore } from '../lib/store'
@@ -139,27 +141,31 @@ export default function Openings() {
   }
   const mainPos = fenAfter(main)
   return (
-    <div className="stack" style={{ gap: 18 }}>
+    <div className="page">
       <div className="page-head">
         <div>
-          <div className="eyebrow">Aperturas</div>
-          <h1>Entrena aperturas con todas sus variantes</h1>
-          <p className="muted" style={{ margin: 0, maxWidth: '64ch' }}>Elige color. «Mi apertura» sale de tus partidas: te lleva a las posiciones donde más fallas. Debajo, las aperturas más jugadas con sus variantes principales.</p>
+          <h1>Aperturas</h1>
+          <p className="lead">«Mi apertura» sale de tus partidas y te lleva a las posiciones donde más fallas. Debajo, las aperturas más jugadas con sus variantes principales.</p>
         </div>
         <SideSwitch side={side} onChange={setSide} />
       </div>
 
-      <section className="card" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 220px) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
+      <section className="card hero-card" aria-labelledby="mia">
         <Board fen={mainPos.fen} orientation={side} mini lastMove={mainPos.last} />
-        <div className="stack" style={{ gap: 10 }}>
-          <div>
-            <div className="eyebrow">Mi apertura · {side === 'w' ? 'blancas' : 'negras'}</div>
-            <h2 style={{ fontSize: 22 }}>{main.length ? numbered(main) : 'Aún sin datos'}</h2>
-            <p className="muted" style={{ margin: 0 }}>
-              {games.length} partidas{root ? ` · ${pct(root.w, root.n)}% ganadas` : ''} · {hot.length} posiciones donde fallas al menos dos veces.
+        <div className="stack">
+          <div className="stack tight">
+            <span className="meta">Mi apertura con {side === 'w' ? 'blancas' : 'negras'}</span>
+            <h2 id="mia" className="mono hero-line">{main.length ? numbered(main) : 'Aún sin datos'}</h2>
+            <p className="sec muted">
+              {games.length} partidas{root ? `, ${pct(root.w, root.n)}% ganadas` : ''}. {hot.length} posiciones donde fallas al menos dos veces.
             </p>
           </div>
-          {root && <div style={{ maxWidth: 360 }}><WDL nd={root} /></div>}
+          {root && (
+            <div className="stack tight" style={{ maxWidth: 360 }}>
+              <WDL nd={root} />
+              <span className="meta num">{root.w} ganadas · {root.d} tablas · {root.l} perdidas</span>
+            </div>
+          )}
           <div className="row">
             <button type="button" className="btn primary" disabled={!hot.length} onClick={() => {
               const ids = hot.slice(0, 12).map((h) => h.key)
@@ -168,32 +174,35 @@ export default function Openings() {
             }}>Corregir mis fallos ({Math.min(12, hot.length)})</button>
             <button type="button" className="btn" onClick={() => go(`aperturas/mia`)}>Explorar mi árbol</button>
           </div>
-          {!games.length && <span className="dim">Si acabas de actualizar la app, espera a que termine «Actualizando tus análisis».</span>}
+          {!games.length && <span className="meta">Si acabas de actualizar la app, espera a que termine «Actualizando tus análisis».</span>}
         </div>
       </section>
 
-      <div className="grid-2">
-        {fams.map((f) => {
-          const done = f.vars.filter((v) => (store.review(v.id)?.box ?? 0) >= 2).length
-          const due = f.vars.filter((v) => store.isDue(v.id)).length
-          const pos = fenAfter(f.root.length ? f.root : f.vars[0].moves.slice(0, 2))
-          return (
-            <button key={f.id} type="button" className="fam-card" onClick={() => go(`aperturas/${f.id}`)}>
-              <Board fen={pos.fen} orientation={side} mini lastMove={pos.last} />
-              <div className="stack" style={{ gap: 6 }}>
-                <h3>{f.name}</h3>
-                <span className="mono dim" style={{ fontSize: 12 }}>{numbered(f.root.length ? f.root : f.vars[0].moves.slice(0, 2))}</span>
-                <span className="dim" style={{ fontSize: 13 }}>{f.desc}</span>
-                <div className="row" style={{ justifyContent: 'space-between' }}>
-                  <span className="dim mono" style={{ fontSize: 11.5 }}>{f.vars.length} variantes · {done} dominadas</span>
-                  {due > 0 && <span className="pill orange">{due} pendientes</span>}
+      <section className="stack" aria-labelledby="libro">
+        <h2 id="libro">Aperturas del libro</h2>
+        <div className="fam-list">
+          {fams.map((f) => {
+            const done = f.vars.filter((v) => (store.review(v.id)?.box ?? 0) >= 2).length
+            const due = f.vars.filter((v) => store.isDue(v.id)).length
+            const pos = fenAfter(f.root.length ? f.root : f.vars[0].moves.slice(0, 2))
+            return (
+              <button key={f.id} type="button" className="fam-card" onClick={() => go(`aperturas/${f.id}`)}>
+                <Board fen={pos.fen} orientation={side} mini lastMove={pos.last} />
+                <div className="body">
+                  <h3>{f.name}</h3>
+                  <span className="mono meta">{numbered(f.root.length ? f.root : f.vars[0].moves.slice(0, 2))}</span>
+                  <p>{f.desc}</p>
+                  <div className="row between" style={{ marginTop: 'auto' }}>
+                    <span className="meta">{f.vars.length} variantes · {done} dominadas</span>
+                    {due > 0 && <span className="tag new">{due} pendientes</span>}
+                  </div>
+                  <Progress value={(100 * done) / f.vars.length} />
                 </div>
-                <Progress value={(100 * done) / f.vars.length} />
-              </div>
-            </button>
-          )
-        })}
-      </div>
+              </button>
+            )
+          })}
+        </div>
+      </section>
     </div>
   )
 }
@@ -207,31 +216,30 @@ export function OpeningFamily({ fam }: { fam: Family }) {
     go(`aperturas/${fam.id}/${ids[0]}`)
   }
   return (
-    <div className="stack">
+    <div className="page">
       <div className="page-head">
         <div>
-          <button type="button" className="btn ghost sm" onClick={() => go('aperturas')}>← Aperturas</button>
+          <button type="button" className="back" onClick={() => go('aperturas')}><ArrowLeft size={16} />Aperturas</button>
           <h1>{fam.name}</h1>
-          <p className="muted" style={{ margin: 0, maxWidth: '64ch' }}>{fam.desc} Juegas con {side === 'w' ? 'blancas' : 'negras'}.</p>
+          <p className="lead">{fam.desc} Juegas con {side === 'w' ? 'blancas' : 'negras'}.</p>
         </div>
         <div className="row">
           <button type="button" className="btn primary" disabled={!due.length} onClick={() => start(due.map((v) => v.id))}>Entrenar {due.length} pendientes</button>
           <button type="button" className="btn" onClick={() => start(fam.vars.map((v) => v.id))}>Todas las variantes</button>
         </div>
       </div>
-      <div className="lcards" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+      <div className="lcards">
         {fam.vars.map((v) => {
           const pos = fenAfter(v.moves)
-          const r = store.review(v.id)
           return (
-            <button key={v.id} type="button" className="lcard" onClick={() => start([v.id, ...fam.vars.filter((x) => x.id !== v.id).map((x) => x.id)])}>
+            <button key={v.id} type="button" className="thumb" onClick={() => start([v.id, ...fam.vars.filter((x) => x.id !== v.id).map((x) => x.id)])}>
               <Board fen={pos.fen} orientation={side} mini lastMove={pos.last} />
-              <div className="meta">
-                <span className="then" style={{ fontSize: 14.5 }}>{v.name}</span>
-                <span className="mono dim" style={{ fontSize: 11.5 }}>{v.eco} · {numbered(v.moves.slice(fam.root.length, fam.root.length + 6), fam.root.length)}…</span>
+              <div className="info">
+                <span className="title">{v.name}</span>
+                <span className="mono meta">{v.eco} · {numbered(v.moves.slice(fam.root.length, fam.root.length + 6), fam.root.length)}…</span>
                 <div className="foot">
-                  {!r ? <span className="pill orange">Nueva</span> : store.isDue(v.id) ? <span className="pill red">Toca hoy</span> : <Mastery box={r.box} />}
-                  <span className="dim mono" style={{ fontSize: 11 }}>{v.moves.length} jug.</span>
+                  <Status id={v.id} />
+                  <span className="meta num">{v.moves.length} jugadas</span>
                 </div>
               </div>
             </button>
@@ -264,24 +272,24 @@ export function MyOpeningExplorer() {
     return [...(p ? [{ from: p.from, to: p.to, color: 'red' as const }] : []), ...(b ? [{ from: b.from, to: b.to, color: 'green' as const }] : [])]
   })() : []
   return (
-    <div className="stack">
+    <div className="page">
       <div className="page-head">
         <div>
-          <button type="button" className="btn ghost sm" onClick={() => go('aperturas')}>← Aperturas</button>
+          <button type="button" className="back" onClick={() => go('aperturas')}><ArrowLeft size={16} />Aperturas</button>
           <h1>Mi árbol de aperturas</h1>
-          <p className="muted" style={{ margin: 0 }}>Cada jugada con cuántas veces la has visto y cómo te fue. En rojo, donde sueles fallar.</p>
+          <p className="lead">Cada jugada con cuántas veces la has visto y cómo te fue. En rojo, donde sueles fallar.</p>
         </div>
         <SideSwitch side={side} onChange={(s) => { setSide(s); setPath([]) }} />
       </div>
       <div className="train">
         <div>
           <Board fen={path.length ? pos.fen : START_FEN} orientation={side} lastMove={pos.last} arrows={arrows} />
-          <div className="crumbs" style={{ marginTop: 10 }}>
+          <nav className="crumbs" aria-label="Jugadas hasta esta posición">
             <button type="button" onClick={() => setPath([])}>Inicio</button>
             {path.map((m, i) => <button key={i} type="button" onClick={() => setPath(path.slice(0, i + 1))}>{i % 2 === 0 ? `${i / 2 + 1}.` : ''}{es(m)}</button>)}
-          </div>
+          </nav>
         </div>
-        <div className="card stack">
+        <div className="side">
           {here ? (
             <Coach kind="bad" title={`Aquí fallas: ${here.failed} de ${here.reached} veces`}>
               Sueles jugar <span className="mv">{es(here.played)}</span> (flecha roja). Mejor <span className="mv">{es(here.best)}</span> (flecha verde).
@@ -292,19 +300,24 @@ export function MyOpeningExplorer() {
           ) : (
             <Coach title={myTurn ? 'Te toca a ti' : 'Le toca al rival'}>{next.length ? 'Pulsa una jugada para seguir por esa rama.' : 'No tienes más partidas por esta rama.'}</Coach>
           )}
-          <div className="explorer-moves">
-            {next.map(({ san, nd }) => {
-              const isHot = hot.some((h) => h.key === [...path, san].join(' '))
-              return (
-                <button key={san} type="button" className="xm" onClick={() => setPath([...path, san])}>
-                  <span className="san">{es(san)}{isHot ? ' ⚠' : ''}</span>
-                  <WDL nd={nd} />
-                  <span className="dim mono num" style={{ fontSize: 12, textAlign: 'right' }}>{nd.n} · {pct(nd.w, nd.n)}%</span>
-                </button>
-              )
-            })}
-          </div>
-          {path.length > 0 && <button type="button" className="btn ghost sm" onClick={() => setPath(path.slice(0, -1))}>← Atrás</button>}
+          {next.length > 0 && (
+            <div className="card pad-s">
+              <div className="xm-head meta"><span>Jugada</span><span>Resultados</span><span>Partidas</span></div>
+              <div className="explorer-moves">
+                {next.map(({ san, nd }) => {
+                  const isHot = hot.some((h) => h.key === [...path, san].join(' '))
+                  return (
+                    <button key={san} type="button" className="xm" onClick={() => setPath([...path, san])} aria-label={`${es(san)}: ${nd.n} partidas, ${pct(nd.w, nd.n)}% ganadas${isHot ? ', sueles fallar después' : ''}`}>
+                      <span className={`san${isHot ? ' hot' : ''}`}>{es(san)}</span>
+                      <WDL nd={nd} />
+                      <span className="meta mono num" style={{ textAlign: 'right' }}>{nd.n} · {pct(nd.w, nd.n)}%</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+          {path.length > 0 && <div><button type="button" className="btn ghost sm" onClick={() => setPath(path.slice(0, -1))}><ArrowLeft size={16} />Atrás</button></div>}
         </div>
       </div>
     </div>

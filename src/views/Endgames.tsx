@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Chess } from 'chess.js'
 import Board, { type Arrow, type MoveInput } from '../board/Board'
 import { sfx } from '../board/sounds'
-import { Coach, EvalBar } from '../components/ui'
+import { Coach, EvalBar, Icons } from '../components/ui'
+import { CaretRight } from '@phosphor-icons/react'
 import { engine } from '../engine/engine'
 import { tryMove, uciToMove } from '../lib/chess-utils'
 import { useStore } from '../lib/store'
@@ -13,28 +14,31 @@ import { endgames, type Endgame } from '../data'
 export default function Endgames() {
   const store = useStore()
   const cats = [...new Set(endgames.map((e) => e.cat))]
+  const done = endgames.filter((e) => store.review(e.id)?.ok).length
   return (
-    <div className="stack">
-      <div>
-        <div className="eyebrow">Finales</div>
-        <h1>Gana (o salva) contra el motor</h1>
-        <p className="muted" style={{ margin: 0 }}>Técnica básica y finales que se te escaparon en tus partidas. El motor defiende al máximo.</p>
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <h1>Gana o salva el final contra el motor</h1>
+          <p className="lead">Técnica básica y finales que se te escaparon en tus partidas. El motor defiende al máximo.</p>
+          <p className="meta">{done} de {endgames.length} superados</p>
+        </div>
       </div>
       {cats.map((c) => (
-        <section key={c} className="card stack" style={{ gap: 10 }}>
-          <h2>{c}</h2>
+        <section key={c} className="stack" aria-labelledby={`cat-${c}`}>
+          <h2 id={`cat-${c}`}>{c}</h2>
           <div className="grid-3">
             {endgames.filter((e) => e.cat === c).map((e) => {
               const r = store.review(e.id)
               return (
                 <button key={e.id} type="button" className="thumb" onClick={() => { setQueue('fin', endgames.map((x) => x.id)); go(`finales/${e.id}`) }}>
                   <Board fen={e.fen} orientation={e.color} mini />
-                  <div className="meta stack" style={{ gap: 4 }}>
-                    <div className="row" style={{ justifyContent: 'space-between' }}>
-                      <b>{e.title}</b>
-                      {r?.ok ? <span className="pill green">Superado</span> : r ? <span className="pill red">Repetir</span> : <span className="pill orange">Nuevo</span>}
+                  <div className="info">
+                    <span className="title">{e.title}</span>
+                    <span className="meta">{e.goalTxt}</span>
+                    <div className="foot">
+                      {r?.ok ? <span className="tag ok">Superado</span> : r ? <span className="tag due">Repetir</span> : <span className="tag new">Nuevo</span>}
                     </div>
-                    <span className="dim">{e.goalTxt}</span>
                   </div>
                 </button>
               )
@@ -134,14 +138,14 @@ export function EndgamePlay({ eg, onDone, onExit, header }: { eg: Endgame; onDon
           <EvalBar cpWhite={evalCp} orientation={eg.color} />
           <Board fen={fen} orientation={eg.color} lastMove={last} interactive={!result && !thinking && g.turn() === eg.color} onMove={onMove} arrows={arrows} />
         </div>
-        <div className="under-board"><span className="dim">{thinking ? 'El motor piensa…' : result ? '' : `Jugada ${moves} de ${eg.limit}`}</span></div>
+        <div className="under-board"><span className="meta" aria-live="polite">{thinking ? 'El motor piensa…' : result ? '' : `Jugada ${moves} de ${eg.limit}`}</span></div>
       </div>
-      <div className="card stack">
+      <div className="side">
         {header}
-        <div>
-          <div className="eyebrow">{eg.cat}</div>
-          <h2>{eg.title}</h2>
-          <b style={{ color: 'var(--orange)' }}>{eg.goalTxt}</b>
+        <div className="side-head">
+          <span className="meta">{eg.cat}</span>
+          <h1 className="h2">{eg.title}</h1>
+          <span className="sec" style={{ color: 'var(--warn)', fontWeight: 500 }}>{eg.goalTxt}</span>
         </div>
         {engineErr && <div className="banner err">El motor no está disponible ({engineErr}). Recarga la página.</div>}
         {result
@@ -150,12 +154,12 @@ export function EndgamePlay({ eg, onDone, onExit, header }: { eg: Endgame; onDon
         <div className="row">
           {result ? (
             <>
-              <button type="button" className="btn primary" onClick={() => onDone(result.ok)}>Siguiente final →</button>
+              <button type="button" className="btn primary" onClick={() => onDone(result.ok)}>Siguiente final<CaretRight size={18} /></button>
               <button type="button" className="btn" onClick={reset}>Intentar otra vez</button>
             </>
           ) : (
             <>
-              <button type="button" className="btn" onClick={hint} disabled={thinking}>Pista del motor</button>
+              <button type="button" className="btn" onClick={hint} disabled={thinking}>{Icons.hint}Pista del motor</button>
               <button type="button" className="btn" onClick={reset}>Reiniciar</button>
               <button type="button" className="btn ghost" onClick={() => (onExit ? onExit() : onDone(false))}>Salir</button>
             </>

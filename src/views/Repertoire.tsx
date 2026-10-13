@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Chess } from 'chess.js'
 import Board, { type Arrow, type Mark, type MoveInput } from '../board/Board'
 import { sfx } from '../board/sounds'
-import { ArrowLegend, Coach, Mastery } from '../components/ui'
+import { ArrowLegend, Coach, Icons, Mastery } from '../components/ui'
+import { CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { attacksOfPiece, es, START_FEN, tryMove } from '../lib/chess-utils'
 import { useStore } from '../lib/store'
 import { go } from '../lib/router'
@@ -33,12 +34,12 @@ export default function Repertoire() {
     go(`repertorio/${id}`)
   }
   return (
-    <div className="stack">
+    <div className="page">
       <div className="page-head">
         <div>
-          <div className="eyebrow">Repertorio · {ordered.length} líneas</div>
           <h1>¿Qué juega el rival?</h1>
-          <p className="muted" style={{ margin: 0, maxWidth: '62ch' }}>Cada rama es una respuesta del rival. Cada tarjeta muestra la posición clave y la flecha de tu jugada.</p>
+          <p className="lead">Cada rama es una respuesta del rival. Cada tarjeta muestra la posición clave y la flecha de tu jugada.</p>
+          <p className="meta">{ordered.length} líneas con {side === 'w' ? 'blancas' : 'negras'} · {due.length} para repasar hoy</p>
         </div>
         <div className="row">
           <SideSwitch side={side} onChange={setSide} />
@@ -47,45 +48,49 @@ export default function Repertoire() {
           </button>
         </div>
       </div>
-      <section className="card">
+      <div>
         {branches.map((b) => {
           const ls = lines.filter((l) => REP_META[l.id]?.branch === b.id)
           const done = ls.filter((l) => (store.review(l.id)?.box ?? 0) >= 2).length
           return (
-            <div key={b.id} className="branch">
+            <section key={b.id} className="branch" aria-labelledby={`br-${b.id}`}>
               <div className="branch-head">
-                <span className="eyebrow">Si el rival…</span>
-                <h3>{b.title}</h3>
-                <div className="movechips">{b.chips.map((m, i) => <span key={i} className={i === b.chips.length - 1 && i % 2 === (side === 'w' ? 1 : 0) ? 'key' : ''}>{i % 2 === 0 ? `${i / 2 + 1}.` : ''}{es(m)}</span>)}</div>
-                <p className="dim" style={{ margin: 0, fontSize: 13 }}>{b.desc}</p>
-                <span className="dim mono" style={{ fontSize: 11.5 }}>{done}/{ls.length} dominadas</span>
+                <h2 id={`br-${b.id}`} className="h3">{b.title}</h2>
+                <div className="movechips" aria-label="Jugadas de la rama">{b.chips.map((m, i) => <span key={i} className={i === b.chips.length - 1 && i % 2 === (side === 'w' ? 1 : 0) ? 'key' : ''}>{i % 2 === 0 ? `${i / 2 + 1}.` : ''}{es(m)}</span>)}</div>
+                <p>{b.desc}</p>
+                <span className="meta">{done} de {ls.length} dominadas</span>
               </div>
               <div className="lcards">
                 {ls.map((l) => <LineCard key={l.id} l={l} side={side} onOpen={() => open(l.id)} />)}
               </div>
-            </div>
+            </section>
           )
         })}
-      </section>
+      </div>
     </div>
   )
 }
 
-function LineCard({ l, side, onOpen }: { l: Line; side: 'w' | 'b'; onOpen: () => void }) {
+export function Status({ id }: { id: string }) {
   const store = useStore()
+  const r = store.review(id)
+  if (!r) return <span className="tag new">Nueva</span>
+  if (store.isDue(id)) return <span className="tag due">Toca hoy</span>
+  return <Mastery box={r.box} />
+}
+
+function LineCard({ l, side, onOpen }: { l: Line; side: 'w' | 'b'; onOpen: () => void }) {
   const meta = REP_META[l.id]
   const kp = useMemo(() => keyPosition(l, meta.key), [l, meta.key])
-  const r = store.review(l.id)
-  const due = store.isDue(l.id)
   return (
-    <button type="button" className="lcard" onClick={onOpen} title={l.name}>
+    <button type="button" className="thumb" onClick={onOpen} aria-label={`${l.name}: si ${meta.when}, juega ${kp.km ? es(kp.km.san) : ''}`}>
       <Board fen={kp.fen} orientation={side} mini lastMove={kp.last} arrows={kp.km ? [{ from: kp.km.from, to: kp.km.to, color: 'green' }] : []} />
-      <div className="meta">
-        <span className="when">Si… {meta.when}</span>
-        <span className="then"><span className="arrow">→</span><span className="mv">{kp.km ? es(kp.km.san) : ''}</span></span>
+      <div className="info">
+        <span className="sec muted">Si {meta.when.charAt(0).toLowerCase() + meta.when.slice(1)}</span>
+        <span className="then"><span className="arrow" aria-hidden="true">→</span><span className="mv">{kp.km ? es(kp.km.san) : ''}</span></span>
         <div className="foot">
-          {!r ? <span className="pill orange">Nueva</span> : due ? <span className="pill red">Toca hoy</span> : <Mastery box={r.box} />}
-          <span className="dim mono" style={{ fontSize: 11 }}>{l.moves.length} jug.</span>
+          <Status id={l.id} />
+          <span className="meta num">{l.moves.length} jugadas</span>
         </div>
       </div>
     </button>
@@ -208,45 +213,45 @@ export function LineDrill({ line, onDone, onExit, header }: { line: Line; onDone
     setI(0); setErrors(0); setMissed(false); setGraded(false); setVis({ arrows: [], marks: [] })
     setBubble({ kind: 'info', title: `Juegas con ${line.side === 'w' ? 'blancas' : 'negras'}`, text: line.intro })
   }
-  const r = store.review(line.id)
 
+  const shownRows = mode === 'explore' ? Math.ceil(line.moves.length / 2) : Math.min(Math.ceil(line.moves.length / 2), Math.floor(i / 2) + 1)
   return (
     <div className="train">
       <div>
         <Board fen={cur.fen} orientation={line.side} lastMove={cur.last} interactive={mode === 'train' && userTurn} onMove={onMove} arrows={vis.arrows} marks={vis.marks} flash={flash} />
         <div className="under-board"><ArrowLegend /></div>
       </div>
-      <div className="card stack">
+      <div className="side">
         {header}
-        <div>
-          <div className="eyebrow">{line.group}</div>
-          <h2>{line.name}</h2>
-          <div className="row" style={{ gap: 12 }}>{r ? <Mastery box={r.box} /> : <span className="pill orange">Nueva</span>}<span className="dim" style={{ fontSize: 13 }}>{i} / {line.moves.length} jugadas</span></div>
+        <div className="side-head">
+          <span className="meta">{line.group}</span>
+          <h1 className="h2">{line.name}</h1>
+          <div className="row"><Status id={line.id} /><span className="meta num">{i} de {line.moves.length} jugadas</span></div>
         </div>
-        <div className="row" role="tablist">
-          <button type="button" className="chip" aria-pressed={mode === 'train'} onClick={() => { setMode('train'); restart() }}>Entrenar</button>
-          <button type="button" className="chip" aria-pressed={mode === 'explore'} onClick={() => { setMode('explore'); setI(0) }}>Ver explicada</button>
+        <div className="seg" role="group" aria-label="Modo">
+          <button type="button" aria-pressed={mode === 'train'} onClick={() => { setMode('train'); restart() }}>Entrenar</button>
+          <button type="button" aria-pressed={mode === 'explore'} onClick={() => { setMode('explore'); setI(0) }}>Ver explicada</button>
         </div>
         <Coach kind={bubble.kind} title={bubble.title}>{bubble.text && <div>{bubble.text}</div>}</Coach>
-        <div className="moves" style={{ gridTemplateColumns: '34px 1fr 1fr' }}>
-          {Array.from({ length: Math.ceil(line.moves.length / 2) }, (_, k) => (
+        <div className="moves">
+          {Array.from({ length: shownRows }, (_, k) => (
             <Row key={k} k={k} line={line} upto={i} onPick={mode === 'explore' ? (n) => setI(n) : undefined} />
           ))}
         </div>
         {mode === 'explore' ? (
           <div className="row">
-            <button type="button" className="btn" onClick={() => setI(Math.max(0, i - 1))} aria-label="Jugada anterior">◀</button>
-            <button type="button" className="btn primary" onClick={() => setI(Math.min(line.moves.length, i + 1))}>Siguiente ▶</button>
-            <span className="dim" style={{ fontSize: 12 }}>También con <kbd>←</kbd> <kbd>→</kbd></span>
+            <button type="button" className="btn icon" onClick={() => setI(Math.max(0, i - 1))} aria-label="Jugada anterior"><CaretLeft size={18} /></button>
+            <button type="button" className="btn primary" onClick={() => setI(Math.min(line.moves.length, i + 1))}>Siguiente jugada<CaretRight size={18} /></button>
+            <span className="meta">También con <kbd>←</kbd> <kbd>→</kbd></span>
           </div>
         ) : done ? (
           <div className="row">
-            <button type="button" className="btn primary" onClick={() => onDone(errors === 0)}>Siguiente línea →</button>
+            <button type="button" className="btn primary" onClick={() => onDone(errors === 0)}>Siguiente línea<CaretRight size={18} /></button>
             <button type="button" className="btn" onClick={restart}>Repetir</button>
           </div>
         ) : (
           <div className="row">
-            <button type="button" className="btn" onClick={hint} disabled={!userTurn}>Pista</button>
+            <button type="button" className="btn" onClick={hint} disabled={!userTurn}>{Icons.hint}Pista</button>
             <button type="button" className="btn ghost" onClick={() => (onExit ? onExit() : onDone(false))}>Salir</button>
           </div>
         )}
@@ -259,9 +264,10 @@ function Row({ k, line, upto, onPick }: { k: number; line: Line; upto: number; o
   const cell = (idx: number) => {
     if (idx >= line.moves.length) return <span />
     const shown = idx < upto || !!onPick
+    if (!shown) return <span className={`next${idx === upto ? '' : ' hide'}`} aria-hidden="true">{idx === upto ? '…' : ''}</span>
     return (
-      <button type="button" className={idx === upto - 1 ? 'cur' : ''} onClick={() => onPick?.(idx + 1)} disabled={!onPick} style={{ opacity: shown ? 1 : 0.25 }}>
-        {shown ? es(line.moves[idx]) : '…'}
+      <button type="button" className={idx === upto - 1 ? 'cur' : ''} onClick={() => onPick?.(idx + 1)} disabled={!onPick}>
+        {es(line.moves[idx])}
       </button>
     )
   }

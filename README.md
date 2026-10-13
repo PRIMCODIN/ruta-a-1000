@@ -9,12 +9,13 @@ Entrenador de ajedrez personal construido sobre mis propias partidas de Chess.co
 - **Finales**: técnica básica y finales de mis partidas, jugados contra el motor con barra de evaluación.
 - **Partidas**: botón «Actualizar desde Chess.com» (API pública) o subida de PGN. Cada partida nueva se analiza en el navegador, genera ejercicios y se puede revisar jugada a jugada con gráfica de evaluación.
 - **Progreso**: compara las partidas recientes con la base inicial (500 partidas) y separa lo que mejora de lo que sigue igual o peor.
+- **Ajustes · Aspecto**: 7 tableros, 8 juegos de piezas, modo oscuro, claro o automático, coordenadas y velocidad de las piezas. La interfaz toma el tono y el color de acento del tablero elegido. Se guarda en la cuenta.
 
 ## Stack
 
 | Parte | Tecnología |
 | --- | --- |
-| Frontend | Vite + React 18 + TypeScript, sin librería de UI |
+| Frontend | Vite + React 18 + TypeScript, sin librería de UI. Iconos Phosphor, letra Geist alojada en la app |
 | Lógica de ajedrez | chess.js 1.0 |
 | Motor | Stockfish 17.1 lite (NNUE, un hilo, WebAssembly) en un Web Worker |
 | Datos y login | Supabase (Postgres + Auth email/contraseña + RLS) |
@@ -28,14 +29,16 @@ src/
   analysis/core.ts       análisis de una partida → jugadas, métricas y ejercicios
   analysis/aggregate.ts  métricas, medias móviles y comparación antes/ahora
   engine/engine.ts       cola de búsquedas sobre Stockfish en un worker
-  board/                 tablero (verde Chess.com), flechas, sonidos sintetizados
+  board/                 tablero, flechas, sonidos sintetizados
+  lib/look.ts            temas de tablero, piezas y modo: escribe las variables CSS de la interfaz
   lib/db.ts              acceso a Supabase
   lib/store.tsx          estado global y repetición espaciada (1, 3, 7, 16 y 35 días)
   lib/sync.tsx           sincronización con Chess.com, PGN e importación inicial
   views/                 pantallas
   data/                  líneas de repertorio y finales
 public/
-  engine/                stockfish.wasm.js + .wasm (GPLv3, ver COPYING-stockfish.txt)
+  engine/                Stockfish 17.1 lite (GPLv3, ver COPYING-stockfish.txt)
+  pieces/                juegos de piezas de Lichess (licencias en pieces/LICENSES.md)
   seed.json              mis 500 partidas ya analizadas + 120 ejercicios iniciales
 supabase/migrations/     esquema de la base de datos
 tools/                   scripts Python: análisis inicial y build_openings.py (catálogo de aperturas)
@@ -53,7 +56,7 @@ npx tsx scripts/check-seed.ts
 
 ## Base de datos
 
-El proyecto de Supabase `ruta-a-1000` ya tiene aplicado `supabase/migrations/20261011000000_init.sql`. Todas las tablas tienen RLS: cada usuario solo ve sus filas. Para recrearlo en otro proyecto, ejecuta ese SQL en el editor de Supabase y cambia las variables de `.env.local` y del workflow.
+El proyecto de Supabase `ruta-a-1000` ya tiene aplicadas las migraciones de `supabase/migrations/` (esquema inicial y `settings.prefs` para el aspecto). Todas las tablas tienen RLS: cada usuario solo ve sus filas. Para recrearlo en otro proyecto, ejecuta ese SQL en el editor de Supabase y cambia las variables de `.env.local` y del workflow.
 
 Como la app es solo para mí, después de crear mi cuenta conviene desactivar los registros nuevos: Supabase → Authentication → Sign In / Providers → desactivar «Allow new users to sign up». Si se mantiene la confirmación por email, el enlace del correo debe apuntar a la URL de GitHub Pages: Authentication → URL Configuration → Site URL = `https://primcodin.github.io/ruta-a-1000/`.
 
@@ -69,4 +72,4 @@ Cada push a `main` construye y publica en GitHub Pages (`.github/workflows/deplo
 
 ## Licencias
 
-Stockfish se distribuye bajo GPLv3 (`public/engine/COPYING-stockfish.txt`). Piezas cburnett bajo CC BY-SA 3.0. Catálogo de aperturas: lichess-org/chess-openings (CC0).
+Stockfish se distribuye bajo GPLv3 (`public/engine/COPYING-stockfish.txt`). Piezas: ver `public/pieces/LICENSES.md`. Letra Geist (SIL OFL 1.1). Iconos Phosphor (MIT). Catálogo de aperturas: lichess-org/chess-openings (CC0).

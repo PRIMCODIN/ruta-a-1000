@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Board, { type Arrow, type Mark } from '../board/Board'
 import { sfx } from '../board/sounds'
 import { Coach, EvalBar, Icons } from '../components/ui'
+import { ArrowLeft, ArrowSquareOut, CaretLeft, CaretRight, SkipBack, SkipForward, UploadSimple } from '@phosphor-icons/react'
 import { buildPlies, type GameRow, type Ply } from '../analysis/core'
 import { es, PHASE_LABEL, pvToSan, START_FEN, uciToMove, winPct } from '../lib/chess-utils'
 import { db } from '../lib/db'
@@ -15,15 +16,15 @@ export function SyncButtons() {
   const [text, setText] = useState('')
   const file = useRef<HTMLInputElement>(null)
   return (
-    <div className="stack" style={{ gap: 10, alignItems: 'flex-end' }}>
+    <div className="stack tight sync-btns">
       <div className="row">
         <button type="button" className="btn primary" disabled={sync.running} onClick={() => sync.syncChesscom()}>
           {Icons.refresh}<span>{sync.running ? 'Sincronizando…' : 'Actualizar desde Chess.com'}</span>
         </button>
-        <button type="button" className="btn" onClick={() => setShowPgn(!showPgn)} aria-expanded={showPgn}>Subir PGN</button>
+        <button type="button" className="btn" onClick={() => setShowPgn(!showPgn)} aria-expanded={showPgn}><UploadSimple size={18} />Subir PGN</button>
       </div>
       {showPgn && (
-        <div className="card flat stack" style={{ width: 'min(520px, 100%)' }}>
+        <div className="card stack pgn-box">
           <label className="f" htmlFor="pgnfile">Archivo .pgn (una o varias partidas)
             <input id="pgnfile" ref={file} type="file" accept=".pgn,text/plain" className="input" onChange={async (e) => {
               const f = e.target.files?.[0]
@@ -35,7 +36,7 @@ export function SyncButtons() {
           </label>
           <div className="row">
             <button type="button" className="btn primary" disabled={!text.trim() || sync.running} onClick={() => { void sync.importPgnText(text); setShowPgn(false); setText('') }}>Analizar e importar</button>
-            <span className="dim" style={{ fontSize: 12.5 }}>Cada partida tarda unos segundos: el motor corre en tu navegador.</span>
+            <span className="meta">Cada partida tarda unos segundos: el motor corre en tu navegador.</span>
           </div>
         </div>
       )}
@@ -50,20 +51,24 @@ export default function Games() {
   const [n, setN] = useState(50)
   const list = [...store.games].reverse().filter((g) => (color === 'all' || g.color === color) && (res === 'all' || g.result === res))
   return (
-    <div className="stack">
+    <div className="page">
       <div className="page-head">
         <div>
-          <div className="eyebrow">Partidas · {store.games.length} analizadas</div>
           <h1>Tus partidas</h1>
-          <p className="muted" style={{ margin: 0 }}>{store.settings.last_sync_at ? `Última actualización: ${new Date(store.settings.last_sync_at).toLocaleString('es-ES')}` : 'Aún no has sincronizado Chess.com.'}</p>
+          <p className="lead">{store.settings.last_sync_at ? `Última actualización: ${new Date(store.settings.last_sync_at).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })}.` : 'Aún no has sincronizado Chess.com.'}</p>
+          <p className="meta">{store.games.length} partidas analizadas</p>
         </div>
         <SyncButtons />
       </div>
-      <div className="row">
-        {(['all', 'w', 'b'] as const).map((c) => <button key={c} type="button" className="chip" aria-pressed={color === c} onClick={() => setColor(c)}>{c === 'all' ? 'Ambos colores' : c === 'w' ? 'Blancas' : 'Negras'}</button>)}
-        {(['all', 'W', 'L', 'D'] as const).map((c) => <button key={c} type="button" className="chip" aria-pressed={res === c} onClick={() => setRes(c)}>{c === 'all' ? 'Todos los resultados' : c === 'W' ? 'Victorias' : c === 'L' ? 'Derrotas' : 'Tablas'}</button>)}
+      <div className="stack tight">
+        <div className="chips" role="group" aria-label="Color">
+          {(['all', 'w', 'b'] as const).map((c) => <button key={c} type="button" className="chip" aria-pressed={color === c} onClick={() => setColor(c)}>{c === 'all' ? 'Ambos colores' : c === 'w' ? 'Blancas' : 'Negras'}</button>)}
+        </div>
+        <div className="chips" role="group" aria-label="Resultado">
+          {(['all', 'W', 'L', 'D'] as const).map((c) => <button key={c} type="button" className="chip" aria-pressed={res === c} onClick={() => setRes(c)}>{c === 'all' ? 'Todos los resultados' : c === 'W' ? 'Victorias' : c === 'L' ? 'Derrotas' : 'Tablas'}</button>)}
+        </div>
       </div>
-      <div className="card table-wrap" style={{ padding: 6 }}>
+      <div className="card table-wrap pad-s">
         <table className="t">
           <thead><tr><th>Res.</th><th>Fecha</th><th>Color</th><th>Ritmo</th><th>Elo</th><th>Precisión</th><th>Errores graves</th><th>Apertura</th></tr></thead>
           <tbody>
@@ -71,27 +76,30 @@ export default function Games() {
               const b = g.stats ? g.stats.blunders.apertura + g.stats.blunders.medio + g.stats.blunders.final : null
               return (
                 <tr key={g.id} className="click" onClick={() => go(`partidas/${g.id}`)}>
-                  <td><span className={`res ${g.result}`}>{g.result === 'W' ? 'G' : g.result === 'L' ? 'P' : '½'}</span></td>
+                  <td><a className="res-link" href={`#/partidas/${g.id}`} onClick={(e) => e.preventDefault()} aria-label={`Abrir partida del ${new Date(g.played_at).toLocaleDateString('es-ES')}`}><span className={`res ${g.result}`}>{g.result === 'W' ? 'G' : g.result === 'L' ? 'P' : '½'}</span></a></td>
                   <td className="num">{new Date(g.played_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
-                  <td>{g.color === 'w' ? '♔ Blancas' : '♚ Negras'}</td>
+                  <td><span className="row" style={{ gap: 6, flexWrap: 'nowrap' }}><span className={`sw-dot ${g.color}`} aria-hidden="true" />{g.color === 'w' ? 'Blancas' : 'Negras'}</span></td>
                   <td className="num">{fmtTc(g.time_control)}</td>
-                  <td className="num">{g.my_elo ?? '—'} <span className="dim">vs {g.opp_elo ?? '—'}</span></td>
-                  <td className="num">{g.stats ? `${g.stats.accuracy.toFixed(0)}%` : '—'}</td>
-                  <td className="num" style={{ color: b ? 'var(--red)' : 'var(--green)' }}>{b ?? '—'}</td>
-                  <td className="dim" style={{ maxWidth: 260, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.stats?.bucket.replace(/^(Blancas|Negras) · /, '') ?? ''}</td>
+                  <td className="num">{g.my_elo ?? '-'} <span className="dim">vs {g.opp_elo ?? '-'}</span></td>
+                  <td className="num">{g.stats ? `${g.stats.accuracy.toFixed(0)}%` : '-'}</td>
+                  <td className="num" style={{ color: b ? 'var(--bad)' : 'var(--good)' }}>{b ?? '-'}</td>
+                  <td className="ellipsis">{g.stats?.bucket.replace(/^(Blancas|Negras) · /, '').replace('—', '') ?? ''}</td>
                 </tr>
               )
             })}
+            {!list.length && (
+              <tr><td colSpan={8} className="empty-row">{store.games.length ? 'Ninguna partida con estos filtros.' : 'Aún no hay partidas. Pulsa «Actualizar desde Chess.com» o sube un PGN.'}</td></tr>
+            )}
           </tbody>
         </table>
       </div>
-      {list.length > n && <button type="button" className="btn" onClick={() => setN(n + 50)}>Ver más</button>}
+      {list.length > n && <div><button type="button" className="btn" onClick={() => setN(n + 50)}>Ver 50 más</button></div>}
     </div>
   )
 }
 
 const fmtTc = (tc: string | null) => {
-  if (!tc) return '—'
+  if (!tc) return '-'
   const [b, inc] = tc.split('+')
   const m = Number(b) / 60
   return `${m >= 1 ? m : Number(b) + 's'}${inc ? `+${inc}` : ''} min`.replace('s min', ' s')
@@ -144,7 +152,12 @@ export function GameReview({ id }: { id: string }) {
   }, [i]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (err) return <div className="banner err">No se pudo abrir la partida: {err}</div>
-  if (!game) return <p className="dim">Cargando partida…</p>
+  if (!game) return (
+    <div className="page" aria-busy="true" aria-label="Cargando partida">
+      <span className="sk" style={{ width: 240, height: 32 }} />
+      <div className="train"><span className="sk" style={{ aspectRatio: '1 / 1' }} /><span className="sk" style={{ height: 320 }} /></div>
+    </div>
+  )
 
   const ply = i > 0 ? plies[i - 1] : null
   const fen = ply ? ply.fenAfter : START_FEN
@@ -167,15 +180,15 @@ export function GameReview({ id }: { id: string }) {
   }
 
   return (
-    <div className="stack">
+    <div className="page">
       <div className="page-head">
         <div>
-          <button type="button" className="btn ghost sm" onClick={() => go('partidas')}>← Partidas</button>
-          <h1>{game.color === 'w' ? 'Blancas' : 'Negras'} · {game.result === 'W' ? 'Victoria' : game.result === 'L' ? 'Derrota' : 'Tablas'}</h1>
-          <p className="muted" style={{ margin: 0 }}>{new Date(game.played_at).toLocaleString('es-ES')} · {game.my_elo} vs {game.opp_elo} · {game.termination}</p>
+          <button type="button" className="back" onClick={() => go('partidas')}><ArrowLeft size={16} />Partidas</button>
+          <h1>{game.color === 'w' ? 'Blancas' : 'Negras'}: {game.result === 'W' ? 'victoria' : game.result === 'L' ? 'derrota' : 'tablas'}</h1>
+          <p className="lead">{new Date(game.played_at).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })} · {game.my_elo} contra {game.opp_elo} · {game.termination}</p>
         </div>
         <div className="row">
-          {game.ext_id.startsWith('http') && <a className="btn" href={game.ext_id} target="_blank" rel="noreferrer">Ver en Chess.com</a>}
+          {game.ext_id.startsWith('http') && <a className="btn" href={game.ext_id} target="_blank" rel="noreferrer">Ver en Chess.com<ArrowSquareOut size={16} /></a>}
           <button type="button" className="btn primary" onClick={nextError} disabled={!myErrors.length}>Siguiente error ({myErrors.length})</button>
         </div>
       </div>
@@ -186,26 +199,26 @@ export function GameReview({ id }: { id: string }) {
             <Board fen={fen} orientation={game.color} lastMove={ply ? [ply.uci.slice(0, 2), ply.uci.slice(2, 4)] : null} arrows={arrows} marks={marks} />
           </div>
           <div className="navbar" role="group" aria-label="Moverse por la partida">
-            <button type="button" className="btn icon" onClick={() => setI(0)} aria-label="Inicio" title="Inicio (Inicio)">⏮</button>
-            <button type="button" className="btn icon" onClick={() => setI((x) => Math.max(0, x - 1))} aria-label="Anterior" title="Anterior (←)">◀</button>
-            <button type="button" className="btn icon" onClick={() => setI((x) => Math.min(plies.length, x + 1))} aria-label="Siguiente" title="Siguiente (→)">▶</button>
-            <button type="button" className="btn icon" onClick={() => setI(plies.length)} aria-label="Final" title="Final (Fin)">⏭</button>
-            <span className="dim mono num" style={{ fontSize: 12, minWidth: 64, textAlign: 'right' }}>{i}/{plies.length}</span>
+            <button type="button" className="btn" onClick={() => setI(0)} aria-label="Ir al inicio" title="Inicio"><SkipBack size={18} weight="fill" /></button>
+            <button type="button" className="btn" onClick={() => setI((x) => Math.max(0, x - 1))} aria-label="Jugada anterior" title="Anterior (←)"><CaretLeft size={20} weight="bold" /></button>
+            <button type="button" className="btn" onClick={() => setI((x) => Math.min(plies.length, x + 1))} aria-label="Jugada siguiente" title="Siguiente (→)"><CaretRight size={20} weight="bold" /></button>
+            <button type="button" className="btn" onClick={() => setI(plies.length)} aria-label="Ir al final" title="Final"><SkipForward size={18} weight="fill" /></button>
+            <span className="meta mono num counter">{i}/{plies.length}</span>
           </div>
           <EvalGraph plies={plies} evals={game.analysis?.evals ?? []} me={game.color} cur={i} onPick={setI} />
         </div>
-        <div className="card stack">
-          <div style={{ minHeight: 132 }}>
+        <div className="side">
+          <div className="coach-slot">
             {ply ? (
               <Coach
                 kind={cls === 'blunder' || cls === 'mistake' ? 'bad' : cls ? 'info' : 'good'}
-                title={`${Math.floor(ply.i / 2) + 1}${ply.color === 'w' ? '.' : '...'} ${es(ply.san)} · ${cls ? CLS_LABEL[cls] : ply.loss < 2 ? 'Buena jugada' : 'Correcta'}`}
+                title={`${Math.floor(ply.i / 2) + 1}${ply.color === 'w' ? '.' : '...'} ${es(ply.san)}: ${cls ? CLS_LABEL[cls].toLowerCase() : ply.loss < 2 ? 'buena jugada' : 'correcta'}`}
               >
-                <div className="dim">{PHASE_LABEL[ply.phase]} · {ply.color === game.color ? 'tu jugada' : 'jugada del rival'}{ply.clock !== null ? ` · reloj ${fmtClock(ply.clock)}` : ''}</div>
+                <div className="meta">{PHASE_LABEL[ply.phase]} · {ply.color === game.color ? 'tu jugada' : 'jugada del rival'}{ply.clock !== null ? ` · reloj ${fmtClock(ply.clock)}` : ''}</div>
                 {cls && ply.best && (
                   <div style={{ marginTop: 4 }}>
                     Probabilidad de ganar: {Math.round(ply.wpBefore)}% → {Math.round(ply.wpAfter)}%. Mejor era <span className="mv">{pvToSan(ply.fenBefore, [ply.best], 1).replace(/^\d+\.+\s?/, '')}</span> (flecha verde).
-                    <div className="mono dim" style={{ fontSize: 12.5, marginTop: 4 }}>{pvToSan(ply.fenBefore, ply.pv, 6)}</div>
+                    <div className="mono meta" style={{ marginTop: 4 }}>{pvToSan(ply.fenBefore, ply.pv, 6)}</div>
                   </div>
                 )}
                 {cls && ply.replyPv[0] && <div style={{ marginTop: 4 }}>Respuesta del rival que lo castiga: <span className="mv">{pvToSan(ply.fenAfter, ply.replyPv, 3)}</span></div>}
@@ -214,13 +227,13 @@ export function GameReview({ id }: { id: string }) {
               <Coach title="Revisión de la partida">Usa los botones bajo el tablero, pulsa en la gráfica o en una jugada, o las flechas <kbd>←</kbd> <kbd>→</kbd> del teclado. Tus errores llevan marca roja (??) o naranja (?).</Coach>
             )}
           </div>
-          <label className="row" style={{ fontSize: 13 }}><input type="checkbox" checked={showBest} onChange={(e) => setShowBest(e.target.checked)} /> Mostrar la mejor jugada en mis errores</label>
-          <div className="moves" ref={movesBox} style={{ position: 'relative' }}>
+          <label className="check"><input type="checkbox" checked={showBest} onChange={(e) => setShowBest(e.target.checked)} /> Mostrar la mejor jugada en mis errores</label>
+          <div className="moves" ref={movesBox}>
             {Array.from({ length: Math.ceil(plies.length / 2) }, (_, k) => (
               <MoveRow key={k} k={k} plies={plies} cur={i} me={game.color} onPick={setI} />
             ))}
           </div>
-          {game.analysis?.eng !== 'sf17l' && game.source !== 'seed' && <p className="dim" style={{ fontSize: 12.5, margin: 0 }}>Esta partida se analizó con el motor antiguo. Se reanaliza sola al abrir la app.</p>}
+          {game.analysis?.eng !== 'sf17l' && game.source !== 'seed' && <p className="meta">Esta partida se analizó con el motor antiguo. Se reanaliza sola al abrir la app.</p>}
         </div>
       </div>
     </div>
@@ -254,19 +267,19 @@ function EvalGraph({ plies, evals, me, cur, onPick }: { plies: Ply[]; evals: num
   }
   const pts = evals.map((e, k) => `${x(k)},${y(e)}`).join(' ')
   return (
-    <svg className="chart" viewBox={`0 0 ${W} ${H}`} style={{ marginTop: 10, borderRadius: 4, cursor: 'pointer', background: me === 'w' ? '#2b3348' : '#eef2f7' }}
+    <svg className="chart evalgraph" viewBox={`0 0 ${W} ${H}`} style={{ background: me === 'w' ? '#2a2d33' : '#eef0ee' }}
       onClick={(e) => {
         const r = (e.currentTarget as SVGElement).getBoundingClientRect()
         onPick(Math.round(((e.clientX - r.left) / r.width) * n))
       }} role="img" aria-label="Gráfica de evaluación">
-      <polygon points={`0,${H} ${pts} ${W},${H}`} fill={me === 'w' ? '#eef2f7' : '#2b3348'} />
-      <line x1="0" x2={W} y1={H / 2} y2={H / 2} stroke="#8a8784" strokeDasharray="3 3" />
+      <polygon points={`0,${H} ${pts} ${W},${H}`} fill={me === 'w' ? '#eef0ee' : '#2a2d33'} />
+      <line x1="0" x2={W} y1={H / 2} y2={H / 2} stroke="#8a8c90" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
       {plies.map((p) => {
         const c = p.color === me ? CLS(p) : null
         if (!c || c === 'inacc') return null
-        return <circle key={p.i} cx={x(p.i + 1)} cy={y(evals[p.i + 1])} r="4.5" fill={c === 'blunder' ? 'var(--red)' : '#e58f2a'} stroke="#000" strokeWidth=".5" />
+        return <circle key={p.i} cx={x(p.i + 1)} cy={y(evals[p.i + 1])} r="4.5" fill={c === 'blunder' ? '#e5484d' : '#e8833a'} stroke="#000" strokeWidth=".5" />
       })}
-      <line x1={x(cur)} x2={x(cur)} y1="0" y2={H} stroke="var(--green)" strokeWidth="2" />
+      <line x1={x(cur)} x2={x(cur)} y1="0" y2={H} stroke="var(--accent)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
     </svg>
   )
 }

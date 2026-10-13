@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as RPE } from 'react'
 import { Chess, type Square, type PieceSymbol } from 'chess.js'
-import { PIECES } from './pieces'
 import { FILES } from '../lib/chess-utils'
 
 export type ArrowColor = 'green' | 'red' | 'orange' | 'blue'
@@ -174,8 +173,8 @@ export default function Board({
           return (
             <div
               key={p.id}
-              className={`piece${dragging ? ' dragging' : ''}`}
-              style={{ ...style, backgroundImage: `url("${PIECES[p.code]}")` }}
+              className={`piece pc-${p.code}${dragging ? ' dragging' : ''}`}
+              style={style}
             />
           )
         })}
@@ -198,8 +197,8 @@ export default function Board({
               <button
                 key={t}
                 type="button"
-                aria-label={`Coronar ${t}`}
-                style={{ backgroundImage: `url("${PIECES[game.turn() + t]}")` }}
+                className={`pc-${game.turn()}${t}`}
+                aria-label={`Coronar ${({ q: 'dama', r: 'torre', b: 'alfil', n: 'caballo' } as Record<string, string>)[t]}`}
                 onClick={() => {
                   const p = promo
                   setPromo(null)

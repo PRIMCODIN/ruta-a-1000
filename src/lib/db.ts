@@ -7,7 +7,7 @@ const key = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || 's
 export const supabase = createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true } })
 
 export type Review = { item_id: string; kind: 'line' | 'puzzle' | 'endgame'; box: number; due: string; seen: number; ok: number }
-export type Settings = { chesscom_username: string | null; last_sync_at: string | null }
+export type Settings = { chesscom_username: string | null; last_sync_at: string | null; prefs?: Record<string, unknown> | null }
 export type Attempt = { item_id: string; kind: string; ok: boolean; at: string }
 
 const LITE_COLS = 'id, ext_id, source, played_at, time_control, color, result, my_elo, opp_elo, termination, stats, eng:analysis->>eng'
@@ -79,8 +79,8 @@ export const db = {
     return check(await supabase.from('attempts').select('item_id, kind, ok, at').gte('at', since).order('at')) as Attempt[]
   },
   async settings(): Promise<Settings> {
-    const r = check(await supabase.from('settings').select('chesscom_username, last_sync_at').maybeSingle()) as Settings | null
-    return r ?? { chesscom_username: null, last_sync_at: null }
+    const r = check(await supabase.from('settings').select('chesscom_username, last_sync_at, prefs').maybeSingle()) as Settings | null
+    return r ?? { chesscom_username: null, last_sync_at: null, prefs: null }
   },
   async saveSettings(s: Partial<Settings>) {
     const u = await db.user()

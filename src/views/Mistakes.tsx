@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Chess } from 'chess.js'
 import Board, { type Arrow, type Mark, type MoveInput } from '../board/Board'
 import { sfx } from '../board/sounds'
-import { ArrowLegend, Coach } from '../components/ui'
+import { ArrowLegend, Coach, Icons } from '../components/ui'
+import { CaretRight } from '@phosphor-icons/react'
 import { es, PHASE_LABEL, threatsAgainst, tryMove, uciToMove, type Phase } from '../lib/chess-utils'
 import { MOTIF_LABEL, type Puzzle } from '../analysis/core'
 import { useStore, type StoredPuzzle } from '../lib/store'
@@ -23,23 +24,23 @@ export default function Mistakes() {
   const solved = all.filter((p) => (store.review(p.id)?.ok ?? 0) > 0).length
   const motifs = [...new Set(all.map((p) => p.motif))]
   return (
-    <div className="stack">
+    <div className="page">
       <div className="page-head">
         <div>
-          <div className="eyebrow">Mis errores · {solved} de {all.length} resueltos</div>
           <h1>Posiciones reales de tus partidas</h1>
-          <p className="muted" style={{ margin: 0 }}>En cada una jugaste algo que perdió mucho. Encuentra lo que no viste. Las nuevas partidas añaden ejercicios solas.</p>
+          <p className="lead">En cada una jugaste algo que perdió mucho. Encuentra lo que no viste. Las partidas nuevas añaden ejercicios solas.</p>
+          <p className="meta">{solved} de {all.length} resueltos</p>
         </div>
         <button type="button" className="btn primary" disabled={!due.length} onClick={() => { setQueue('err', due.map((p) => p.id)); go(`errores/${due[0].id}`) }}>Resolver {due.length} pendientes</button>
       </div>
       {!all.length && <div className="banner">Aún no hay ejercicios. Importa tus partidas desde <a href="#/ajustes">Ajustes</a> o sincroniza Chess.com en <a href="#/partidas">Partidas</a>.</div>}
-      <div className="stack" style={{ gap: 8 }}>
-        <div className="row">
+      <div className="stack tight">
+        <div className="chips" role="group" aria-label="Fase de la partida">
           {(['todas', 'apertura', 'medio', 'final'] as const).map((x) => (
             <button key={x} type="button" className="chip" aria-pressed={ph === x} onClick={() => { setPh(x); setN(PAGE) }}>{x === 'todas' ? 'Todas las fases' : PHASE_LABEL[x]}</button>
           ))}
         </div>
-        <div className="row">
+        <div className="chips" role="group" aria-label="Tema">
           <button type="button" className="chip" aria-pressed={mo === 'todos'} onClick={() => setMo('todos')}>Todos los temas</button>
           {motifs.map((x) => (
             <button key={x} type="button" className="chip" aria-pressed={mo === x} onClick={() => { setMo(x); setN(PAGE) }}>{MOTIF_LABEL[x]}</button>
@@ -47,26 +48,35 @@ export default function Mistakes() {
           <button type="button" className="chip" aria-pressed={onlyDue} onClick={() => setOnlyDue(!onlyDue)}>Solo pendientes</button>
         </div>
       </div>
+      {all.length > 0 && !list.length && (
+        <div className="banner">Ningún ejercicio con estos filtros. <button type="button" className="btn sm" onClick={() => { setPh('todas'); setMo('todos'); setOnlyDue(false) }}>Quitar filtros</button></div>
+      )}
       <div className="grid-3">
         {list.slice(0, n).map((p) => {
           const r = store.review(p.id)
           return (
             <button key={p.id} type="button" className="thumb" onClick={() => { setQueue('err', list.map((x) => x.id)); go(`errores/${p.id}`) }}>
               <Board fen={p.fen} orientation={p.color} mini lastMove={p.prev ? [p.prev.slice(0, 2), p.prev.slice(2, 4)] : null} />
-              <div className="meta stack" style={{ gap: 4 }}>
-                <div className="row" style={{ justifyContent: 'space-between' }}>
-                  <b>{MOTIF_LABEL[p.motif]}</b>
-                  {r?.ok ? <span className="pill green">Resuelto</span> : r ? <span className="pill red">Repetir</span> : <span className="pill orange">Nuevo</span>}
+              <div className="info">
+                <span className="title">{MOTIF_LABEL[p.motif]}</span>
+                <span className="meta">{PHASE_LABEL[p.phase]} · jugada {p.moveNo} · {fmtDate(p.date)}</span>
+                <div className="foot">
+                  {r?.ok ? <span className="tag ok">Resuelto</span> : r ? <span className="tag due">Repetir</span> : <span className="tag new">Nuevo</span>}
+                  <span className="meta">{p.color === 'w' ? 'Blancas' : 'Negras'}</span>
                 </div>
-                <span className="dim">{PHASE_LABEL[p.phase]} · {p.date} · jugada {p.moveNo}</span>
               </div>
             </button>
           )
         })}
       </div>
-      {list.length > n && <button type="button" className="btn" onClick={() => setN(n + PAGE)}>Ver más ({list.length - n})</button>}
+      {list.length > n && <div><button type="button" className="btn" onClick={() => setN(n + PAGE)}>Ver {Math.min(PAGE, list.length - n)} más</button></div>}
     </div>
   )
+}
+
+export const fmtDate = (d: string) => {
+  const t = new Date(d.replace(/\//g, '-'))
+  return isNaN(t.getTime()) ? d : t.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
 
 type Stage = 'solve' | 'done'
@@ -196,7 +206,7 @@ export function PuzzleSolver({ puzzle: p, onDone, header }: { puzzle: StoredPuzz
     })
     setBubble({
       kind: 'info', title: 'Comprobación de seguridad',
-      body: <>En <b style={{ color: '#d0361f' }}>rojo</b>, tus piezas atacadas o mal defendidas. En <b style={{ color: '#5d9948' }}>verde</b>, piezas rivales que podrías ganar. {mine.length + theirs.length === 0 && 'No hay nada colgado: busca jaques y amenazas.'}</>,
+      body: <>En <b style={{ color: 'var(--bad)' }}>rojo</b>, tus piezas atacadas o mal defendidas. En <b style={{ color: 'var(--good)' }}>verde</b>, piezas rivales que podrías ganar. {mine.length + theirs.length === 0 && 'No hay nada colgado: busca jaques y amenazas.'}</>,
     })
   }
 
@@ -220,36 +230,36 @@ export function PuzzleSolver({ puzzle: p, onDone, header }: { puzzle: StoredPuzz
         <Board fen={pos.fen} orientation={p.color} lastMove={pos.last} interactive={stage === 'solve' && pos.fen === p.fen} onMove={onMove} arrows={vis.arrows} marks={vis.marks} flash={flash} />
         <div className="under-board"><ArrowLegend /></div>
       </div>
-      <div className="card stack">
+      <div className="side">
         {header}
-        <div>
-          <div className="eyebrow">{MOTIF_LABEL[p.motif]} · {PHASE_LABEL[p.phase]} · {p.date} · jugada {p.moveNo}</div>
-          <h2>Juegas con {p.color === 'w' ? 'blancas' : 'negras'}</h2>
+        <div className="side-head">
+          <span className="meta">{MOTIF_LABEL[p.motif]} · {PHASE_LABEL[p.phase]} · jugada {p.moveNo} · {fmtDate(p.date)}</span>
+          <h1 className="h2">Juegas con {p.color === 'w' ? 'blancas' : 'negras'}</h1>
         </div>
         <Coach kind={bubble.kind} title={bubble.title}>{bubble.body}</Coach>
         {stage === 'solve' ? (
           <div className="row">
-            <button type="button" className="btn" onClick={threats}>Ver amenazas</button>
-            <button type="button" className="btn" onClick={hint}>{hintLevel === 0 ? 'Pista' : 'Otra pista'}</button>
-            <button type="button" className="btn ghost" onClick={reveal}>Solución</button>
+            <button type="button" className="btn" onClick={threats}>{Icons.threats}Ver amenazas</button>
+            <button type="button" className="btn" onClick={hint}>{Icons.hint}{hintLevel === 0 ? 'Pista' : 'Otra pista'}</button>
+            <button type="button" className="btn ghost" onClick={reveal}>Ver solución</button>
             {pos.fen !== p.fen && <button type="button" className="btn ghost" onClick={reset}>Volver a la posición</button>}
           </div>
         ) : (
-          <div className="stack" style={{ gap: 10 }}>
-            <div className="card flat stack" style={{ gap: 8 }}>
-              <b>Repasa sobre el tablero</b>
+          <>
+            <div className="well stack tight">
+              <span className="sec" style={{ fontWeight: 500 }}>Repasa sobre el tablero</span>
               <div className="row">
                 <button type="button" className="btn sm" onClick={showWhatHappened}>Lo que pasó en tu partida</button>
                 <button type="button" className="btn sm" onClick={showBestLine}>La línea buena</button>
                 {p.game_id && <button type="button" className="btn sm ghost" onClick={() => go(`partidas/${p.game_id}`)}>Abrir la partida</button>}
               </div>
-              <span className="mono dim" style={{ fontSize: 12.5 }}>{p.line}</span>
+              <span className="mono meta">{p.line}</span>
             </div>
             <div className="row">
-              <button type="button" className="btn primary" onClick={() => onDone(!!ok)}>Siguiente ejercicio →</button>
+              <button type="button" className="btn primary" onClick={() => onDone(!!ok)}>Siguiente ejercicio<CaretRight size={18} /></button>
               <button type="button" className="btn" onClick={() => { setStage('solve'); setTries(0); setHelped(true); setHintLevel(0); reset(); setBubble({ kind: 'info', title: p.prompt }) }}>Intentar otra vez</button>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>

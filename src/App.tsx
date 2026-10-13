@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRoute, go } from './lib/router'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/db'
 import { StoreProvider, useStore } from './lib/store'
 import { SyncProvider, useSync } from './lib/sync'
-import { Icons, Progress } from './components/ui'
+import { Icons, Logo, Progress } from './components/ui'
 import Login from './views/Login'
 import Today, { SessionRunner } from './views/Today'
 import Repertoire, { LineDrill } from './views/Repertoire'
@@ -25,7 +25,7 @@ export default function App() {
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
     return () => data.subscription.unsubscribe()
   }, [])
-  if (session === undefined) return <div className="center-screen dim">Cargando…</div>
+  if (session === undefined) return <div className="center-screen" aria-busy="true" />
   if (!session) return <Login />
   return (
     <StoreProvider key={session.user.id}>
@@ -36,11 +36,11 @@ export default function App() {
   )
 }
 
-const NAV: { id: string; label: string; short?: string; icon: keyof typeof Icons }[] = [
-  { id: 'hoy', label: 'Hoy', icon: 'hoy' },
-  { id: 'repertorio', label: 'Repertorio', short: 'Repert.', icon: 'repertorio' },
-  { id: 'aperturas', label: 'Aperturas', icon: 'aperturas' },
-  { id: 'errores', label: 'Mis errores', short: 'Errores', icon: 'errores' },
+const NAV: { id: string; label: string; short?: string; icon: keyof typeof Icons; tab?: boolean }[] = [
+  { id: 'hoy', label: 'Hoy', icon: 'hoy', tab: true },
+  { id: 'repertorio', label: 'Repertorio', icon: 'repertorio', tab: true },
+  { id: 'aperturas', label: 'Aperturas', icon: 'aperturas', tab: true },
+  { id: 'errores', label: 'Mis errores', short: 'Errores', icon: 'errores', tab: true },
   { id: 'finales', label: 'Finales', icon: 'finales' },
   { id: 'partidas', label: 'Partidas', icon: 'partidas' },
   { id: 'progreso', label: 'Progreso', icon: 'progreso' },
@@ -64,7 +64,7 @@ function Shell() {
   const dueOf = (id: string) => store.isDue(id)
 
   let view
-  if (store.loading) view = <p className="dim">Cargando tus datos…</p>
+  if (store.loading) view = <PageSkeleton />
   else if (page === 'repertorio' && arg) {
     const l = lines.find((x) => x.id === arg)
     view = l ? <LineDrill key={l.id} line={l} onDone={after('rep', l.id, (id) => `repertorio/${id}`, 'repertorio', dueOf)} onExit={() => go('repertorio')} /> : <Repertoire />
@@ -100,31 +100,79 @@ function Shell() {
   else view = <Today />
 
   const navPage = page === 'sesion' ? 'hoy' : page
+  const count = (id: string) => (due[id] ? <span className="count">{due[id] > 99 ? '99+' : due[id]}</span> : null)
   return (
     <div className="app">
+      <a className="skip btn" href="#contenido" onClick={(e) => { e.preventDefault(); document.getElementById('contenido')?.focus() }}>Saltar al contenido</a>
       <nav className="side-nav" aria-label="Secciones">
-        <div className="brand"><span className="logo" />Ruta a 1000</div>
+        <div className="brand"><Logo />Ruta a 1000</div>
         {NAV.map((n) => (
           <button key={n.id} type="button" className="nav-btn" aria-current={navPage === n.id ? 'page' : undefined} onClick={() => go(n.id)}>
             {Icons[n.icon]}
-            <span className="lbl-long">{n.label}</span>
-            <span className="lbl-short">{n.short ?? n.label}</span>
-            {due[n.id] ? <span className="count">{due[n.id] > 99 ? '99+' : due[n.id]}</span> : null}
+            <span>{n.label}</span>
+            {count(n.id)}
           </button>
         ))}
         <div className="nav-foot">{store.games.length} partidas analizadas</div>
       </nav>
-      <main className="main">
+      <main className="main" id="contenido" tabIndex={-1}>
         {store.error && (
-          <div className="banner err" style={{ marginBottom: 14 }}>
+          <div className="banner err" style={{ marginBottom: 16 }}>
             <span>{store.error}</span>
             <button type="button" className="btn sm" onClick={() => store.reload()}>Reintentar</button>
           </div>
         )}
         {view}
       </main>
+      <TabBar page={navPage} count={count} />
       {(sync.running || sync.message || sync.error) && <SyncToast />}
     </div>
+  )
+}
+
+/** Móvil: cuatro pestañas fijas y «Más» con el resto, en una hoja que se cierra con Esc. */
+function TabBar({ page, count }: { page: string; count: (id: string) => JSX.Element | null }) {
+  const [open, setOpen] = useState(false)
+  const moreBtn = useRef<HTMLButtonElement>(null)
+  const sheet = useRef<HTMLDivElement>(null)
+  const extra = NAV.filter((n) => !n.tab)
+  const inExtra = extra.some((n) => n.id === page)
+  useEffect(() => setOpen(false), [page])
+  useEffect(() => {
+    if (!open) return
+    sheet.current?.querySelector<HTMLButtonElement>('button')?.focus()
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setOpen(false); moreBtn.current?.focus() }
+      if (e.key === 'Tab' && sheet.current) {
+        const b = [...sheet.current.querySelectorAll<HTMLButtonElement>('button')]
+        if (e.shiftKey && document.activeElement === b[0]) { e.preventDefault(); b[b.length - 1].focus() }
+        else if (!e.shiftKey && document.activeElement === b[b.length - 1]) { e.preventDefault(); b[0].focus() }
+      }
+    }
+    window.addEventListener('keydown', key)
+    return () => window.removeEventListener('keydown', key)
+  }, [open])
+  return (
+    <>
+      <div className={`scrim${open ? ' open' : ''}`} onClick={() => setOpen(false)} />
+      <div ref={sheet} className={`sheet${open ? ' open' : ''}`} role="dialog" aria-modal="true" aria-label="Más secciones" hidden={!open}>
+        {extra.map((n) => (
+          <button key={n.id} type="button" className="nav-btn" aria-current={page === n.id ? 'page' : undefined} onClick={() => go(n.id)}>
+            {Icons[n.icon]}<span>{n.label}</span>
+          </button>
+        ))}
+      </div>
+      <nav className="tabbar" aria-label="Secciones">
+        {NAV.filter((n) => n.tab).map((n) => (
+          <button key={n.id} type="button" className="tab" aria-current={page === n.id ? 'page' : undefined} onClick={() => go(n.id)}>
+            {Icons[n.icon]}<span>{n.short ?? n.label}</span>{count(n.id)}
+          </button>
+        ))}
+        <button ref={moreBtn} type="button" className="tab" aria-current={inExtra ? 'page' : undefined} aria-expanded={open} onClick={() => setOpen(!open)}>
+          {Icons.mas}<span>{inExtra ? NAV.find((n) => n.id === page)!.label : 'Más'}</span>
+        </button>
+      </nav>
+    </>
   )
 }
 
@@ -135,17 +183,17 @@ function SyncToast() {
   if (hidden) return null
   const pctGames = s.total ? (100 * (s.done + (s.plyTotal ? s.plyDone / s.plyTotal : 0))) / s.total : 0
   return (
-    <div className="toast card stack" style={{ gap: 8, boxShadow: '0 8px 24px rgba(0,0,0,.45)' }} role="status">
+    <div className="toast card stack tight" role="status">
       {s.running ? (
         <>
           <b>{s.total ? `Analizando partida ${Math.min(s.done + 1, s.total)} de ${s.total}` : 'Sincronizando…'}</b>
-          <span className="dim" style={{ fontSize: 13 }}>{s.label}</span>
+          <span className="meta">{s.label}</span>
           <Progress value={pctGames} />
           <div className="row"><button type="button" className="btn sm" onClick={s.cancel}>Detener</button></div>
         </>
       ) : (
         <>
-          <b style={{ color: s.error ? 'var(--red)' : 'var(--green)' }}>{s.error ?? s.message}</b>
+          <b style={{ color: s.error ? 'var(--bad)' : 'var(--ink)', fontWeight: 600 }}>{s.error ?? s.message}</b>
           {s.error && s.message && <span className="dim">{s.message}</span>}
           <div className="row">
             {!s.error && <button type="button" className="btn sm primary" onClick={() => { setHidden(true); go('progreso') }}>Ver progreso</button>}
@@ -153,6 +201,16 @@ function SyncToast() {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+/** Esqueleto mientras llegan los datos: la forma de una página, sin spinner. */
+function PageSkeleton() {
+  return (
+    <div className="page" aria-busy="true" aria-label="Cargando tus datos">
+      <div className="stack tight"><span className="sk" style={{ width: 280, height: 32 }} /><span className="sk" style={{ width: '50%', height: 16 }} /></div>
+      <div className="grid-2"><span className="sk" style={{ height: 240 }} /><span className="sk" style={{ height: 240 }} /></div>
     </div>
   )
 }

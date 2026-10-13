@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react'
-import { PIECES } from '../board/pieces'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { ArrowsClockwise, BookOpenText, Lightbulb, ShieldWarning, Eye, ChartLineUp, DotsThreeOutline, FlagCheckered, GearSix, ListBullets, PuzzlePiece, Target, TreeStructure } from '@phosphor-icons/react'
 import { winPct } from '../lib/chess-utils'
 
 export function EvalBar({ cpWhite, orientation }: { cpWhite: number | null; orientation: 'w' | 'b' }) {
@@ -9,7 +9,7 @@ export function EvalBar({ cpWhite, orientation }: { cpWhite: number | null; orie
   return (
     <div className="evalbar" style={flip ? { transform: 'rotate(180deg)' } : undefined} aria-label={`Evaluación ${label}`}>
       <div className="w" style={{ height: `${w}%` }} />
-      <span className="lbl" style={{ bottom: w >= 50 ? 4 : undefined, top: w >= 50 ? undefined : 4, transform: flip ? 'rotate(180deg)' : undefined, color: w >= 50 ? '#1d2b4a' : '#eef2f7' }}>
+      <span className="lbl" style={{ bottom: w >= 50 ? 4 : undefined, top: w >= 50 ? undefined : 4, transform: flip ? 'rotate(180deg)' : undefined, color: w >= 50 ? '#2a2d33' : '#eef0ee' }}>
         {label}
       </span>
     </div>
@@ -19,7 +19,7 @@ export function EvalBar({ cpWhite, orientation }: { cpWhite: number | null; orie
 export function Coach({ kind = 'info', title, children }: { kind?: 'good' | 'bad' | 'info'; title: ReactNode; children?: ReactNode }) {
   return (
     <div className="coach">
-      <div className="avatar" style={{ backgroundImage: `url("${PIECES.wn}")` }} aria-hidden="true" />
+      <div className="avatar" aria-hidden="true" />
       <div className={`bubble ${kind}`} role="status">
         <b className="t">{title}</b>
         {children}
@@ -27,6 +27,8 @@ export function Coach({ kind = 'info', title, children }: { kind?: 'good' | 'bad
     </div>
   )
 }
+
+export const Logo = () => <span className="logo" aria-hidden="true"><i /><i /><i /><i /></span>
 
 export function Mastery({ box }: { box: number }) {
   return (
@@ -50,21 +52,21 @@ export function ArrowLegend() {
   )
 }
 
-const I = (d: string) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d={d} />
-  </svg>
-)
+const ic = { size: 20, weight: 'regular' as const, 'aria-hidden': true }
 export const Icons = {
-  hoy: I('M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'),
-  repertorio: I('M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5zM4 21a2 2 0 0 1 2-2h13'),
-  aperturas: I('M5 21h14M7 21v-3h10v3M9 18l1-7M15 18l-1-7M8 11h8M10 11V8l2-5 2 5v3'),
-  errores: I('M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z'),
-  finales: I('M9 21h6M10 17h4M12 3a2 2 0 0 1 2 2c0 1-1 2-1 2h-2s-1-1-1-2a2 2 0 0 1 2-2zM8 17l1-8h6l1 8'),
-  partidas: I('M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z'),
-  progreso: I('M3 20h18M5 16l4-5 4 3 6-8'),
-  ajustes: I('M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z'),
-  refresh: I('M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6'),
+  hoy: <Target {...ic} />,
+  repertorio: <BookOpenText {...ic} />,
+  aperturas: <TreeStructure {...ic} />,
+  errores: <PuzzlePiece {...ic} />,
+  finales: <FlagCheckered {...ic} />,
+  partidas: <ListBullets {...ic} />,
+  progreso: <ChartLineUp {...ic} />,
+  ajustes: <GearSix {...ic} />,
+  mas: <DotsThreeOutline {...ic} />,
+  refresh: <ArrowsClockwise {...ic} />,
+  hint: <Lightbulb {...ic} size={18} />,
+  threats: <ShieldWarning {...ic} size={18} />,
+  eye: <Eye {...ic} size={18} />,
 }
 
 export const SERIES_COLORS = ['#4894e2', '#c0841f', '#e05a8a'] // validados sobre #262421 (ΔE CVD ≥ 11)
@@ -82,9 +84,19 @@ export function LineChart({
   baselineLabel?: string
 }) {
   const [hover, setHover] = useState<number | null>(null)
+  // el viewBox sigue al ancho real: 1 unidad = 1 px, así el texto mide lo que dice
+  const box = useRef<HTMLDivElement>(null)
+  const [W, setW] = useState(640)
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    const ro = new ResizeObserver(([e]) => setW(Math.max(280, Math.round(e.contentRect.width))))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const all = series.flatMap((s) => s.pts)
   if (all.length < 2) return <p className="dim">Aún no hay suficientes partidas para dibujar la tendencia.</p>
-  const W = 640, H = height, L = 44, R = 14, T = 12, B = 26
+  const H = height, L = 44, R = 14, T = 12, B = 26
   const xs = all.map((p) => new Date(p.x).getTime())
   const x0 = Math.min(...xs), x1 = Math.max(...xs)
   let lo = yMin ?? Math.min(...all.map((p) => p.y), baseline ?? Infinity)
@@ -106,7 +118,7 @@ export function LineChart({
     return { s, p: best }
   }).filter((n) => n.p)
   return (
-    <div style={{ position: 'relative' }}>
+    <div ref={box} style={{ position: 'relative' }}>
       {series.length > 1 && (
         <div className="legend" style={{ marginBottom: 6 }}>
           {series.map((s) => <span key={s.name}><i style={{ background: s.color }} />{s.name}</span>)}
@@ -118,14 +130,14 @@ export function LineChart({
         {ticks.map((v, k) => (
           <g key={k}>
             <line x1={L} x2={W - R} y1={sy(v)} y2={sy(v)} stroke="var(--line)" strokeWidth="1" />
-            <text x={L - 6} y={sy(v) + 4} textAnchor="end" fontSize="11" fill="var(--muted)">{fmt(v)}</text>
+            <text x={L - 6} y={sy(v) + 4} textAnchor="end" fontSize="12" fill="var(--muted)">{fmt(v)}</text>
           </g>
         ))}
-        {months.map((m) => <text key={m.t} x={sx(m.t)} y={H - 8} textAnchor="middle" fontSize="11" fill="var(--muted)">{m.label}</text>)}
+        {months.map((m) => <text key={m.t} x={sx(m.t)} y={H - 8} textAnchor="middle" fontSize="12" fill="var(--muted)">{m.label}</text>)}
         {baseline !== undefined && (
           <g>
             <line x1={L} x2={W - R} y1={sy(baseline)} y2={sy(baseline)} stroke="var(--muted)" strokeDasharray="4 4" strokeWidth="1" />
-            {baselineLabel && <text x={W - R} y={sy(baseline) - 5} textAnchor="end" fontSize="11" fill="var(--muted)">{baselineLabel}</text>}
+            {baselineLabel && <text x={W - R} y={sy(baseline) - 5} textAnchor="end" fontSize="12" fill="var(--muted)">{baselineLabel}</text>}
           </g>
         )}
         {series.map((s) => {
@@ -147,9 +159,9 @@ export function LineChart({
         )}
       </svg>
       {hover !== null && near.length > 0 && (
-        <div className="card flat" style={{ position: 'absolute', top: series.length > 1 ? 28 : 4, left: `${Math.min(70, (hover / W) * 100)}%`, padding: '6px 10px', fontSize: 12.5, pointerEvents: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.4)' }}>
+        <div className="well chart-tip" style={{ top: series.length > 1 ? 28 : 4, left: `${Math.min(70, (hover / W) * 100)}%` }}>
           <div className="dim">{new Date(near[0].p.x).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</div>
-          {near.map((n) => <div key={n.s.name}><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: n.s.color, marginRight: 6 }} />{series.length > 1 ? `${n.s.name}: ` : ''}<b>{fmt(n.p.y)}</b></div>)}
+          {near.map((n) => <div key={n.s.name}><i className="sw" style={{ background: n.s.color }} />{series.length > 1 ? `${n.s.name}: ` : ''}<b>{fmt(n.p.y)}</b></div>)}
         </div>
       )}
     </div>
