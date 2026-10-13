@@ -7,6 +7,7 @@ import { engine } from '../engine/engine'
 import { tryMove, uciToMove } from '../lib/chess-utils'
 import { useStore } from '../lib/store'
 import { go } from '../lib/router'
+import { setQueue } from '../lib/queue'
 import { endgames, type Endgame } from '../data'
 
 export default function Endgames() {
@@ -26,7 +27,7 @@ export default function Endgames() {
             {endgames.filter((e) => e.cat === c).map((e) => {
               const r = store.review(e.id)
               return (
-                <button key={e.id} type="button" className="thumb" onClick={() => go(`finales/${e.id}`)}>
+                <button key={e.id} type="button" className="thumb" onClick={() => { setQueue('fin', endgames.map((x) => x.id)); go(`finales/${e.id}`) }}>
                   <Board fen={e.fen} orientation={e.color} mini />
                   <div className="meta stack" style={{ gap: 4 }}>
                     <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -45,7 +46,7 @@ export default function Endgames() {
   )
 }
 
-export function EndgamePlay({ eg, onDone, header }: { eg: Endgame; onDone: (ok: boolean) => void; header?: ReactNode }) {
+export function EndgamePlay({ eg, onDone, onExit, header }: { eg: Endgame; onDone: (ok: boolean) => void; onExit?: () => void; header?: ReactNode }) {
   const store = useStore()
   const [fen, setFen] = useState(eg.fen)
   const [last, setLast] = useState<[string, string] | null>(null)
@@ -149,14 +150,14 @@ export function EndgamePlay({ eg, onDone, header }: { eg: Endgame; onDone: (ok: 
         <div className="row">
           {result ? (
             <>
-              <button type="button" className="btn primary" onClick={() => onDone(result.ok)}>Siguiente</button>
+              <button type="button" className="btn primary" onClick={() => onDone(result.ok)}>Siguiente final →</button>
               <button type="button" className="btn" onClick={reset}>Intentar otra vez</button>
             </>
           ) : (
             <>
               <button type="button" className="btn" onClick={hint} disabled={thinking}>Pista del motor</button>
               <button type="button" className="btn" onClick={reset}>Reiniciar</button>
-              <button type="button" className="btn ghost" onClick={() => onDone(false)}>Salir</button>
+              <button type="button" className="btn ghost" onClick={() => (onExit ? onExit() : onDone(false))}>Salir</button>
             </>
           )}
         </div>

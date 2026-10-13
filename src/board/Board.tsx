@@ -48,10 +48,10 @@ function diffPieces(prev: P[], fen: string): P[] {
 }
 
 const ARROW_FILL: Record<ArrowColor, string> = {
-  green: 'rgba(129,182,76,.88)',
-  red: 'rgba(224,64,48,.85)',
-  orange: 'rgba(255,170,0,.85)',
-  blue: 'rgba(72,148,226,.85)',
+  green: 'rgba(20,184,166,.9)',
+  red: 'rgba(240,72,60,.88)',
+  orange: 'rgba(245,165,36,.92)',
+  blue: 'rgba(80,130,240,.88)',
 }
 
 export default function Board({

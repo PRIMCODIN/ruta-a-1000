@@ -14,6 +14,9 @@ import Games, { GameReview } from './views/Games'
 import ProgressView from './views/Progress'
 import SettingsView from './views/Settings'
 import { lines, endgames } from './data'
+import Openings, { FAMILIES, MyOpeningExplorer, OpeningFamily, hotToLine, myTree, varToLine } from './views/Openings'
+import { getSide } from './components/SideSwitch'
+import { getQueue, nextInQueue, setQueue } from './lib/queue'
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
@@ -33,10 +36,11 @@ export default function App() {
   )
 }
 
-const NAV: { id: string; label: string; icon: keyof typeof Icons }[] = [
+const NAV: { id: string; label: string; short?: string; icon: keyof typeof Icons }[] = [
   { id: 'hoy', label: 'Hoy', icon: 'hoy' },
-  { id: 'repertorio', label: 'Repertorio', icon: 'repertorio' },
-  { id: 'errores', label: 'Mis errores', icon: 'errores' },
+  { id: 'repertorio', label: 'Repertorio', short: 'Repert.', icon: 'repertorio' },
+  { id: 'aperturas', label: 'Aperturas', icon: 'aperturas' },
+  { id: 'errores', label: 'Mis errores', short: 'Errores', icon: 'errores' },
   { id: 'finales', label: 'Finales', icon: 'finales' },
   { id: 'partidas', label: 'Partidas', icon: 'partidas' },
   { id: 'progreso', label: 'Progreso', icon: 'progreso' },
@@ -52,20 +56,42 @@ function Shell() {
     errores: store.puzzles.filter((p) => store.isDue(p.id)).length,
   }
 
+  /** Al terminar un ejercicio, pasa al siguiente de la lista de la que vienes. */
+  const after = (kind: string, current: string, toPath: (id: string) => string, back: string, prefer?: (id: string) => boolean) => () => {
+    const n = nextInQueue(kind, current, prefer)
+    go(n ? toPath(n) : back)
+  }
+  const dueOf = (id: string) => store.isDue(id)
+
   let view
   if (store.loading) view = <p className="dim">Cargando tus datos…</p>
   else if (page === 'repertorio' && arg) {
     const l = lines.find((x) => x.id === arg)
-    view = l ? <LineDrill key={l.id} line={l} onDone={() => go('repertorio')} /> : <Repertoire />
+    view = l ? <LineDrill key={l.id} line={l} onDone={after('rep', l.id, (id) => `repertorio/${id}`, 'repertorio', dueOf)} onExit={() => go('repertorio')} /> : <Repertoire />
   } else if (page === 'repertorio') view = <Repertoire />
   else if (page === 'errores' && arg) {
     const p = store.puzzles.find((x) => x.id === arg)
-    view = p ? <PuzzleSolver key={p.id} puzzle={p} onDone={() => go('errores')} /> : <Mistakes />
+    if (p && !getQueue('err').includes(p.id)) setQueue('err', store.puzzles.filter((x) => store.isDue(x.id)).sort((a, b) => b.date.localeCompare(a.date)).map((x) => x.id))
+    view = p ? <PuzzleSolver key={p.id} puzzle={p} onDone={after('err', p.id, (id) => `errores/${id}`, 'errores', dueOf)} /> : <Mistakes />
   } else if (page === 'errores') view = <Mistakes />
   else if (page === 'finales' && arg) {
     const e = endgames.find((x) => x.id === arg)
-    view = e ? <EndgamePlay key={e.id} eg={e} onDone={() => go('finales')} /> : <Endgames />
+    if (e && !getQueue('fin').includes(e.id)) setQueue('fin', endgames.map((x) => x.id))
+    view = e ? <EndgamePlay key={e.id} eg={e} onDone={after('fin', e.id, (id) => `finales/${id}`, 'finales', dueOf)} onExit={() => go('finales')} /> : <Endgames />
   } else if (page === 'finales') view = <Endgames />
+  else if (page === 'aperturas' && arg === 'mia') view = <MyOpeningExplorer />
+  else if (page === 'aperturas' && arg?.startsWith('mia/')) {
+    const item = arg.slice(4)
+    const [side, key] = [item.slice(0, 1) as 'w' | 'b', item.slice(2)]
+    const h = myTree(store.games, side).hot.find((x) => x.key === key)
+    view = h ? <LineDrill key={item} line={hotToLine(h, side)} onDone={after('mia', item, (id) => `aperturas/mia/${id}`, 'aperturas')} onExit={() => go('aperturas')} /> : <Openings />
+  } else if (page === 'aperturas' && arg) {
+    const [famId, varId] = arg.split('/')
+    const fam = FAMILIES.find((f) => f.id === famId)
+    const v = fam?.vars.find((x) => x.id === varId)
+    if (fam && v) view = <LineDrill key={v.id} line={varToLine(fam, v, getSide())} onDone={after('op', `${fam.id}|${v.id}`, (id) => `aperturas/${id.replace('|', '/')}`, `aperturas/${fam.id}`, (id) => dueOf(id.split('|')[1]))} onExit={() => go(`aperturas/${fam.id}`)} />
+    else view = fam ? <OpeningFamily fam={fam} /> : <Openings />
+  } else if (page === 'aperturas') view = <Openings />
   else if (page === 'partidas' && arg) view = <GameReview key={arg} id={arg} />
   else if (page === 'partidas') view = <Games />
   else if (page === 'progreso') view = <ProgressView />
@@ -81,7 +107,8 @@ function Shell() {
         {NAV.map((n) => (
           <button key={n.id} type="button" className="nav-btn" aria-current={navPage === n.id ? 'page' : undefined} onClick={() => go(n.id)}>
             {Icons[n.icon]}
-            <span>{n.label}</span>
+            <span className="lbl-long">{n.label}</span>
+            <span className="lbl-short">{n.short ?? n.label}</span>
             {due[n.id] ? <span className="count">{due[n.id] > 99 ? '99+' : due[n.id]}</span> : null}
           </button>
         ))}

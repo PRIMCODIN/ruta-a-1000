@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react'
-import { analyzePgn, buildPlies, computeStats, generatePuzzles, type GameRow, type Puzzle } from '../analysis/core'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { analyzePgn, buildPlies, computeStats, generatePuzzles, ENGINE_TAG, type GameRow, type Puzzle } from '../analysis/core'
 import { db } from './db'
 import { useStore } from './store'
 
@@ -26,11 +26,12 @@ const idle: SyncState = { running: false, label: '', done: 0, total: 0, plyDone:
 
 export const DEFAULT_USER = (import.meta.env.VITE_CHESSCOM_USERNAME as string | undefined) ?? ''
 
-export function getDepth() {
+/** Nodos por posición: más nodos, análisis más fino y más lento. */
+export function getNodes() {
   try {
-    return Number(localStorage.getItem('r1000.depth')) || 10
+    return Number(localStorage.getItem('r1000.nodes')) || 150000
   } catch {
-    return 10
+    return 150000
   }
 }
 
@@ -113,14 +114,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       patch({ running: false, message: 'No hay partidas nuevas.' })
       return 0
     }
-    const depth = getDepth()
+    const nodes = getNodes()
     let n = 0
     patch({ total: todo.length, done: 0 })
     for (const row of todo) {
       if (cancelled.current) break
       patch({ label: `${row.color === 'w' ? 'Blancas' : 'Negras'} · ${row.played_at.slice(0, 10)} · ${row.opening ?? ''}`, plyDone: 0, plyTotal: 0 })
       try {
-        const analysis = await analyzePgn(row.pgn, depth, (i, total) => patch({ plyDone: i, plyTotal: total }))
+        const analysis = await analyzePgn(row.pgn, nodes, (i, total) => patch({ plyDone: i, plyTotal: total }))
         const plies = buildPlies(row.pgn, analysis)
         const stats = computeStats(row, plies)
         const puzzles: Puzzle[] = await generatePuzzles(row, plies)
@@ -206,6 +207,46 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     patch({ done: rows.length })
     return `${rows.length} partidas y ${seed.puzzles.length} ejercicios importados.`
   }), [run, store])
+
+  /**
+   * Mantenimiento automático: recalcula las métricas antiguas (v<3) y vuelve a analizar
+   * con el motor actual las partidas nuevas analizadas con un motor anterior.
+   */
+  const upgradeTried = useRef(false)
+  useEffect(() => {
+    if (store.loading || upgradeTried.current || st.running || !store.games.length) return
+    upgradeTried.current = true
+    const reanalyze = store.games.filter((g) => g.source !== 'seed' && g.eng !== ENGINE_TAG).map((g) => g.id)
+    const restat = store.games.filter((g) => (!g.stats || g.stats.v < 3) && !reanalyze.includes(g.id)).map((g) => g.id)
+    if (!reanalyze.length && !restat.length) return
+    void run('Actualizando tus análisis…', async () => {
+      const nodes = getNodes()
+      let fixed = 0
+      for (let i = 0; i < restat.length; i += 100) {
+        if (cancelled.current) break
+        patch({ label: `Recalculando métricas (${Math.min(i + 100, restat.length)} de ${restat.length})…`, total: 0 })
+        const rows = await db.gamesFull(restat.slice(i, i + 100))
+        await db.upsertGames(rows.map((r) => ({ ...r, stats: computeStats(r, buildPlies(r.pgn, r.analysis!)) })))
+      }
+      patch({ total: reanalyze.length, done: 0 })
+      for (const id of reanalyze) {
+        if (cancelled.current) break
+        const [row] = await db.gamesFull([id])
+        if (!row) continue
+        patch({ label: `Reanalizando con Stockfish 17 · ${row.played_at.slice(0, 10)}`, plyDone: 0, plyTotal: 0 })
+        const analysis = await analyzePgn(row.pgn, nodes, (k, total) => patch({ plyDone: k, plyTotal: total }))
+        const plies = buildPlies(row.pgn, analysis)
+        const stats = computeStats(row, plies)
+        const puzzles = await generatePuzzles(row, plies)
+        await db.upsertGames([{ ...row, analysis, stats }])
+        await db.deletePuzzlesOfGame(id)
+        if (puzzles.length) await db.upsertPuzzles(puzzles.map((p) => ({ ...p, game_id: id })))
+        fixed++
+        patch({ done: fixed })
+      }
+      return fixed ? `${fixed} partida${fixed === 1 ? '' : 's'} reanalizada${fixed === 1 ? '' : 's'} con Stockfish 17.` : 'Métricas actualizadas.'
+    })
+  }, [store.loading, store.games]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const value: Sync = { ...st, syncChesscom, importPgnText, importSeed, cancel: () => { cancelled.current = true } }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

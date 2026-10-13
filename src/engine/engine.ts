@@ -1,5 +1,6 @@
 /**
- * Envoltorio de Stockfish 10 (stockfish.js, GPLv3) en un Web Worker.
+ * Envoltorio de Stockfish 17.1 lite (NNUE, un hilo, GPLv3) en un Web Worker.
+ * Si el navegador no tiene WebAssembly cae a Stockfish 10 en asm.js.
  * Las peticiones van en cola: una sola búsqueda a la vez.
  */
 export type EngineLine = { cp: number; mate: number | null; pv: string[] }
@@ -24,7 +25,7 @@ class Engine {
     this.status = 'loading'
     this.ready = new Promise<void>((resolve, reject) => {
       const base = import.meta.env.BASE_URL
-      const file = typeof WebAssembly === 'object' ? 'stockfish.wasm.js' : 'stockfish.js'
+      const file = typeof WebAssembly === 'object' ? 'sf17-lite.js' : 'stockfish.js'
       try {
         this.worker = new Worker(`${base}engine/${file}`)
       } catch (e) {

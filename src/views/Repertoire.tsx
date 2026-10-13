@@ -7,51 +7,88 @@ import { attacksOfPiece, es, START_FEN, tryMove } from '../lib/chess-utils'
 import { useStore } from '../lib/store'
 import { go } from '../lib/router'
 import { lines, type Line } from '../data'
-const GROUP_NOTES: Record<string, string> = {
-  'Blancas · Cuando te disputan el centro': 'Tu problema real con blancas: contra ...e5 temprano puntuabas 38% y contra 1...e5 un 35%. Aquí está el tenedor ...e5-e4 que te costó 9 partidas.',
-  'Blancas · Tu sistema': 'Tu Colle con sus dos rupturas: e4 (y e5 cuando gana algo concreto) y c4 cuando el negro controla e4.',
-  'Negras · Contra 1.e4': 'Siciliana con ...Cc6 y fianchetto, y cómo evitar la clavada Ag5 sobre tu caballo de f6.',
-  'Negras · Contra 1.d4': 'Una sola estructura contra 1.d4: ...d5 y ...Cf6, con ...c5 contra el Londres.',
+import { BRANCHES, REP_META } from '../data/repMeta'
+import { SideSwitch, useSide } from '../components/SideSwitch'
+import { setQueue } from '../lib/queue'
+/** Posición justo antes de tu jugada clave, con la jugada previa del rival. */
+function keyPosition(l: Line, key: number) {
+  const g = new Chess()
+  let last: [string, string] | null = null
+  for (const m of l.moves.slice(0, key)) {
+    const r = g.move(m)
+    last = [r.from, r.to]
+  }
+  const km = tryMove(new Chess(g.fen()), l.moves[key])
+  return { fen: g.fen(), last, km }
 }
 
 export default function Repertoire() {
   const store = useStore()
-  const groups = [...new Set(lines.map((l) => l.group))]
-  const due = lines.filter((l) => store.isDue(l.id))
+  const [side, setSide] = useSide()
+  const branches = BRANCHES.filter((b) => b.side === side)
+  const ordered = branches.flatMap((b) => lines.filter((l) => REP_META[l.id]?.branch === b.id))
+  const due = ordered.filter((l) => store.isDue(l.id))
+  const open = (id: string) => {
+    setQueue('rep', ordered.map((l) => l.id))
+    go(`repertorio/${id}`)
+  }
   return (
     <div className="stack">
       <div className="page-head">
         <div>
-          <div className="eyebrow">Repertorio</div>
-          <h1>Tus aperturas, jugada a jugada</h1>
-          <p className="muted" style={{ margin: 0 }}>Juegas tus jugadas, el rival responde solo y cada idea se explica sobre el tablero.</p>
+          <div className="eyebrow">Repertorio · {ordered.length} líneas</div>
+          <h1>¿Qué juega el rival?</h1>
+          <p className="muted" style={{ margin: 0, maxWidth: '62ch' }}>Cada rama es una respuesta del rival. Cada tarjeta muestra la posición clave y la flecha de tu jugada.</p>
         </div>
-        <button type="button" className="btn primary" disabled={!due.length} onClick={() => go(`repertorio/${due[0].id}`)}>
-          Repasar {due.length} pendiente{due.length === 1 ? '' : 's'}
-        </button>
+        <div className="row">
+          <SideSwitch side={side} onChange={setSide} />
+          <button type="button" className="btn primary" disabled={!due.length} onClick={() => { setQueue('rep', due.map((l) => l.id)); go(`repertorio/${due[0].id}`) }}>
+            Repasar {due.length} pendiente{due.length === 1 ? '' : 's'}
+          </button>
+        </div>
       </div>
-      {groups.map((g) => (
-        <section key={g} className="card stack" style={{ gap: 10 }}>
-          <div>
-            <h2>{g}</h2>
-            <p className="muted" style={{ margin: 0, maxWidth: '70ch' }}>{GROUP_NOTES[g]}</p>
-          </div>
-          <div className="grid-3">
-            {lines.filter((l) => l.group === g).map((l) => {
-              const r = store.review(l.id)
-              const isDue = store.isDue(l.id)
-              return (
-                <button key={l.id} type="button" className="item" onClick={() => go(`repertorio/${l.id}`)}>
-                  <span style={{ fontWeight: 700 }}>{l.name}</span>
-                  {!r ? <span className="pill orange">Nueva</span> : isDue ? <span className="pill red">Toca hoy</span> : <Mastery box={r.box} />}
-                  <span className="sub mono">{l.moves.slice(0, 6).map((m, i) => (i % 2 === 0 ? `${i / 2 + 1}.` : '') + es(m)).join(' ')}…</span>
-                </button>
-              )
-            })}
-          </div>
-        </section>
-      ))}
+      <section className="card">
+        {branches.map((b) => {
+          const ls = lines.filter((l) => REP_META[l.id]?.branch === b.id)
+          const done = ls.filter((l) => (store.review(l.id)?.box ?? 0) >= 2).length
+          return (
+            <div key={b.id} className="branch">
+              <div className="branch-head">
+                <span className="eyebrow">Si el rival…</span>
+                <h3>{b.title}</h3>
+                <div className="movechips">{b.chips.map((m, i) => <span key={i} className={i === b.chips.length - 1 && i % 2 === (side === 'w' ? 1 : 0) ? 'key' : ''}>{i % 2 === 0 ? `${i / 2 + 1}.` : ''}{es(m)}</span>)}</div>
+                <p className="dim" style={{ margin: 0, fontSize: 13 }}>{b.desc}</p>
+                <span className="dim mono" style={{ fontSize: 11.5 }}>{done}/{ls.length} dominadas</span>
+              </div>
+              <div className="lcards">
+                {ls.map((l) => <LineCard key={l.id} l={l} side={side} onOpen={() => open(l.id)} />)}
+              </div>
+            </div>
+          )
+        })}
+      </section>
     </div>
+  )
+}
+
+function LineCard({ l, side, onOpen }: { l: Line; side: 'w' | 'b'; onOpen: () => void }) {
+  const store = useStore()
+  const meta = REP_META[l.id]
+  const kp = useMemo(() => keyPosition(l, meta.key), [l, meta.key])
+  const r = store.review(l.id)
+  const due = store.isDue(l.id)
+  return (
+    <button type="button" className="lcard" onClick={onOpen} title={l.name}>
+      <Board fen={kp.fen} orientation={side} mini lastMove={kp.last} arrows={kp.km ? [{ from: kp.km.from, to: kp.km.to, color: 'green' }] : []} />
+      <div className="meta">
+        <span className="when">Si… {meta.when}</span>
+        <span className="then"><span className="arrow">→</span><span className="mv">{kp.km ? es(kp.km.san) : ''}</span></span>
+        <div className="foot">
+          {!r ? <span className="pill orange">Nueva</span> : due ? <span className="pill red">Toca hoy</span> : <Mastery box={r.box} />}
+          <span className="dim mono" style={{ fontSize: 11 }}>{l.moves.length} jug.</span>
+        </div>
+      </div>
+    </button>
   )
 }
 
@@ -64,7 +101,7 @@ function moveVisual(fenAfter: string, from: string, to: string, color: Arrow['co
   }
 }
 
-export function LineDrill({ line, onDone, header }: { line: Line; onDone: (ok: boolean) => void; header?: ReactNode }) {
+export function LineDrill({ line, onDone, onExit, header }: { line: Line; onDone: (ok: boolean) => void; onExit?: () => void; header?: ReactNode }) {
   const store = useStore()
   const [mode, setMode] = useState<'train' | 'explore'>('train')
   const [i, setI] = useState(0) // jugadas ya hechas
@@ -204,13 +241,13 @@ export function LineDrill({ line, onDone, header }: { line: Line; onDone: (ok: b
           </div>
         ) : done ? (
           <div className="row">
-            <button type="button" className="btn primary" onClick={() => onDone(errors === 0)}>Continuar</button>
+            <button type="button" className="btn primary" onClick={() => onDone(errors === 0)}>Siguiente línea →</button>
             <button type="button" className="btn" onClick={restart}>Repetir</button>
           </div>
         ) : (
           <div className="row">
             <button type="button" className="btn" onClick={hint} disabled={!userTurn}>Pista</button>
-            <button type="button" className="btn ghost" onClick={() => onDone(false)}>Salir</button>
+            <button type="button" className="btn ghost" onClick={() => (onExit ? onExit() : onDone(false))}>Salir</button>
           </div>
         )}
       </div>

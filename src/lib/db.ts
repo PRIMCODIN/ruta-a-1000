@@ -10,7 +10,7 @@ export type Review = { item_id: string; kind: 'line' | 'puzzle' | 'endgame'; box
 export type Settings = { chesscom_username: string | null; last_sync_at: string | null }
 export type Attempt = { item_id: string; kind: string; ok: boolean; at: string }
 
-const LITE_COLS = 'id, ext_id, source, played_at, time_control, color, result, my_elo, opp_elo, termination, stats'
+const LITE_COLS = 'id, ext_id, source, played_at, time_control, color, result, my_elo, opp_elo, termination, stats, eng:analysis->>eng'
 
 function check<T>(r: { data: T; error: { message: string } | null }): T {
   if (r.error) throw new Error(r.error.message)
@@ -38,6 +38,13 @@ export const db = {
   games: () => selectAll<GameLite>('games', LITE_COLS, 'played_at'),
   async gameFull(id: string) {
     return check(await supabase.from('games').select('*').eq('id', id).single()) as GameRow & { id: string; analysis: RawAnalysis }
+  },
+  async gamesFull(ids: string[]) {
+    if (!ids.length) return []
+    return check(await supabase.from('games').select('*').in('id', ids)) as (GameRow & { id: string })[]
+  },
+  async deletePuzzlesOfGame(gameId: string) {
+    check(await supabase.from('puzzles').delete().eq('game_id', gameId))
   },
   async upsertGames(rows: GameRow[]) {
     for (let i = 0; i < rows.length; i += 50) {

@@ -3,7 +3,8 @@
 Entrenador de ajedrez personal construido sobre mis propias partidas de Chess.com: repertorio con repetición espaciada, mis errores convertidos en ejercicios, finales contra Stockfish y un panel que mide si de verdad estoy mejorando.
 
 - **Hoy**: sesión de unos 15 minutos que mezcla repertorio, errores y un final, empezando por lo que fallé.
-- **Repertorio**: 28 líneas comprobadas con Stockfish (Colle con blancas, siciliana con ...Cc6 y fianchetto con negras). Las explicaciones se dibujan en el tablero: flecha verde para la jugada y flechas rojas para lo que ataca.
+- **Repertorio**: árbol por respuesta del rival, con minitablero de la posición clave en cada línea. 28 líneas comprobadas con Stockfish (Colle con blancas, siciliana con ...Cc6 y fianchetto con negras). Las explicaciones se dibujan en el tablero.
+- **Aperturas**: 13 aperturas (Italiana, Española, Siciliana, Caro-Kann…) con 80 variantes del catálogo de Lichess, para entrenar con blancas o con negras. «Mi apertura» construye tu árbol con tus partidas y te lleva a las posiciones donde más fallas.
 - **Mis errores**: posiciones reales donde perdí ventaja. Incluye «Ver amenazas», que marca en rojo mis piezas atacadas o mal defendidas y en verde lo que puedo ganar. Al terminar se puede repetir «lo que pasó en tu partida» y «la línea buena».
 - **Finales**: técnica básica y finales de mis partidas, jugados contra el motor con barra de evaluación.
 - **Partidas**: botón «Actualizar desde Chess.com» (API pública) o subida de PGN. Cada partida nueva se analiza en el navegador, genera ejercicios y se puede revisar jugada a jugada con gráfica de evaluación.
@@ -15,7 +16,7 @@ Entrenador de ajedrez personal construido sobre mis propias partidas de Chess.co
 | --- | --- |
 | Frontend | Vite + React 18 + TypeScript, sin librería de UI |
 | Lógica de ajedrez | chess.js 1.0 |
-| Motor | Stockfish 10 (stockfish.js, WebAssembly) en un Web Worker |
+| Motor | Stockfish 17.1 lite (NNUE, un hilo, WebAssembly) en un Web Worker |
 | Datos y login | Supabase (Postgres + Auth email/contraseña + RLS) |
 | Despliegue | GitHub Pages con GitHub Actions |
 | Partidas | API pública de Chess.com (`api.chess.com/pub`, permite CORS) |
@@ -37,7 +38,7 @@ public/
   engine/                stockfish.wasm.js + .wasm (GPLv3, ver COPYING-stockfish.txt)
   seed.json              mis 500 partidas ya analizadas + 120 ejercicios iniciales
 supabase/migrations/     esquema de la base de datos
-tools/                   scripts Python con los que se generó el análisis inicial
+tools/                   scripts Python: análisis inicial y build_openings.py (catálogo de aperturas)
 scripts/check-seed.ts    comprueba que las métricas en TS coinciden con el análisis original
 ```
 
@@ -68,4 +69,4 @@ Cada push a `main` construye y publica en GitHub Pages (`.github/workflows/deplo
 
 ## Licencias
 
-Stockfish se distribuye bajo GPLv3 (`public/engine/COPYING-stockfish.txt`). Piezas cburnett bajo CC BY-SA 3.0.
+Stockfish se distribuye bajo GPLv3 (`public/engine/COPYING-stockfish.txt`). Piezas cburnett bajo CC BY-SA 3.0. Catálogo de aperturas: lichess-org/chess-openings (CC0).

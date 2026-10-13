@@ -1,0 +1,1814 @@
+[
+ {
+  "id": "italiana",
+  "side": "w",
+  "name": "Italiana",
+  "desc": "1.e4 e5 2.Cf3 Cc6 3.Ac4: el alfil apunta a f7. Desarrollo rápido, enroque y ruptura d4 con c3.",
+  "root": [
+   "e4",
+   "e5",
+   "Nf3",
+   "Nc6",
+   "Bc4"
+  ],
+  "vars": [
+   {
+    "id": "op:italiana:0",
+    "name": "Giuoco Pianissimo: d3 tranquilo",
+    "eco": "C50",
+    "book": 11,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bc4",
+     "Nf6",
+     "O-O",
+     "Bc5",
+     "Nc3",
+     "d6",
+     "d3",
+     "a6"
+    ]
+   },
+   {
+    "id": "op:italiana:1",
+    "name": "Giuoco Piano: c3 sin prisa",
+    "eco": "C50",
+    "book": 6,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bc4",
+     "Bc5",
+     "c3",
+     "Nf6",
+     "d3",
+     "Bb6",
+     "O-O",
+     "O-O"
+    ]
+   },
+   {
+    "id": "op:italiana:2",
+    "name": "Dos caballos: 3...Cf6",
+    "eco": "C58",
+    "book": 15,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bc4",
+     "Nf6",
+     "Ng5",
+     "d5",
+     "exd5",
+     "Na5",
+     "Bb5+",
+     "c6",
+     "dxc6",
+     "bxc6",
+     "Be2"
+    ]
+   },
+   {
+    "id": "op:italiana:3",
+    "name": "Ataque Fegatello: Cg5 y Cxf7",
+    "eco": "C57",
+    "book": 11,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bc4",
+     "Nf6",
+     "Ng5",
+     "d5",
+     "exd5",
+     "Nxd5",
+     "Nxf7",
+     "Kxf7"
+    ]
+   },
+   {
+    "id": "op:italiana:4",
+    "name": "Gambito Evans: b4",
+    "eco": "C52",
+    "book": 12,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bc4",
+     "Bc5",
+     "b4",
+     "Bxb4",
+     "c3",
+     "Ba5",
+     "O-O",
+     "d6"
+    ]
+   },
+   {
+    "id": "op:italiana:5",
+    "name": "Defensa húngara: 3...Ae7",
+    "eco": "C50",
+    "book": 6,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bc4",
+     "Be7",
+     "d3",
+     "Nf6",
+     "O-O",
+     "d6",
+     "c3",
+     "O-O"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "espanola",
+  "side": "w",
+  "name": "Española",
+  "desc": "1.e4 e5 2.Cf3 Cc6 3.Ab5: presión sobre el caballo que defiende e5. Juego lento y maniobras.",
+  "root": [
+   "e4",
+   "e5",
+   "Nf3",
+   "Nc6",
+   "Bb5"
+  ],
+  "vars": [
+   {
+    "id": "op:espanola:0",
+    "name": "Defensa Morphy: 3...a6",
+    "eco": "C78",
+    "book": 12,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bb5",
+     "a6",
+     "Ba4",
+     "Nf6",
+     "O-O",
+     "b5",
+     "Bb3",
+     "d6"
+    ]
+   },
+   {
+    "id": "op:espanola:1",
+    "name": "Cerrada: 5...Ae7 y Te1",
+    "eco": "C90",
+    "book": 16,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bb5",
+     "a6",
+     "Ba4",
+     "Nf6",
+     "O-O",
+     "Be7",
+     "Re1",
+     "b5",
+     "Bb3",
+     "d6",
+     "c3",
+     "O-O"
+    ]
+   },
+   {
+    "id": "op:espanola:2",
+    "name": "Berlinesa: 3...Cf6",
+    "eco": "C65",
+    "book": 7,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bb5",
+     "Nf6",
+     "O-O",
+     "Nxe4",
+     "Re1",
+     "Nd6",
+     "Nxe5",
+     "Be7"
+    ]
+   },
+   {
+    "id": "op:espanola:3",
+    "name": "Del cambio: Axc6",
+    "eco": "C68",
+    "book": 7,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bb5",
+     "a6",
+     "Bxc6",
+     "dxc6",
+     "O-O",
+     "Qf6",
+     "d4",
+     "exd4"
+    ]
+   },
+   {
+    "id": "op:espanola:4",
+    "name": "Abierta: 5...Cxe4",
+    "eco": "C80",
+    "book": 15,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bb5",
+     "a6",
+     "Ba4",
+     "Nf6",
+     "O-O",
+     "Nxe4",
+     "d4",
+     "b5",
+     "Bb3",
+     "d5",
+     "dxe5"
+    ]
+   },
+   {
+    "id": "op:espanola:5",
+    "name": "Defensa Steinitz: 3...d6",
+    "eco": "C62",
+    "book": 7,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bb5",
+     "d6",
+     "d4",
+     "exd4",
+     "Nxd4",
+     "Bd7",
+     "Nc3",
+     "Nf6"
+    ]
+   },
+   {
+    "id": "op:espanola:6",
+    "name": "Gambito Schliemann: 3...f5",
+    "eco": "C63",
+    "book": 6,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "Bb5",
+     "f5",
+     "Nc3",
+     "fxe4",
+     "Nxe4",
+     "Nf6",
+     "Qe2",
+     "d5"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "escocesa",
+  "side": "w",
+  "name": "Escocesa",
+  "desc": "1.e4 e5 2.Cf3 Cc6 3.d4: abres el centro de inmediato y juegas con piezas activas.",
+  "root": [
+   "e4",
+   "e5",
+   "Nf3",
+   "Nc6",
+   "d4",
+   "exd4"
+  ],
+  "vars": [
+   {
+    "id": "op:escocesa:0",
+    "name": "Clásica: 4...Ac5",
+    "eco": "C45",
+    "book": 8,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "d4",
+     "exd4",
+     "Nxd4",
+     "Bc5",
+     "Be3",
+     "Qf6",
+     "c3",
+     "Nge7"
+    ]
+   },
+   {
+    "id": "op:escocesa:1",
+    "name": "Schmidt: 4...Cf6",
+    "eco": "C45",
+    "book": 8,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "d4",
+     "exd4",
+     "Nxd4",
+     "Nf6",
+     "Nxc6",
+     "bxc6",
+     "Bd3",
+     "d5"
+    ]
+   },
+   {
+    "id": "op:escocesa:2",
+    "name": "Mieses: e5 contra el caballo",
+    "eco": "C45",
+    "book": 11,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "d4",
+     "exd4",
+     "Nxd4",
+     "Nf6",
+     "Nxc6",
+     "bxc6",
+     "e5",
+     "Qe7"
+    ]
+   },
+   {
+    "id": "op:escocesa:3",
+    "name": "Steinitz: 4...Dh4",
+    "eco": "C45",
+    "book": 9,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "d4",
+     "exd4",
+     "Nxd4",
+     "Qh4",
+     "Nc3",
+     "Bb4",
+     "Be2",
+     "Qxe4"
+    ]
+   },
+   {
+    "id": "op:escocesa:4",
+    "name": "Gambito escocés: 4.Ac4",
+    "eco": "C44",
+    "book": 7,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "d4",
+     "exd4",
+     "Bc4",
+     "Nf6",
+     "e5",
+     "d5",
+     "Bb5",
+     "Ne4"
+    ]
+   },
+   {
+    "id": "op:escocesa:5",
+    "name": "Gambito Göring: 4.c3",
+    "eco": "C44",
+    "book": 7,
+    "moves": [
+     "e4",
+     "e5",
+     "Nf3",
+     "Nc6",
+     "d4",
+     "exd4",
+     "c3",
+     "dxc3",
+     "Nxc3",
+     "Bb4",
+     "Bc4",
+     "Bxc3+"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "londres",
+  "side": "w",
+  "name": "Sistema Londres",
+  "desc": "d4, Af4, e3, Cf3, c3 y Cbd2: estructura sólida con el alfil de c1 fuera antes de e3.",
+  "root": [
+   "d4"
+  ],
+  "vars": [
+   {
+    "id": "op:londres:0",
+    "name": "Contra ...d5 y ...c5",
+    "eco": "D02",
+    "book": 11,
+    "moves": [
+     "d4",
+     "d5",
+     "Nf3",
+     "Nf6",
+     "Bf4",
+     "c5",
+     "e3",
+     "Nc6",
+     "Nbd2",
+     "e6",
+     "c3",
+     "c4"
+    ]
+   },
+   {
+    "id": "op:londres:1",
+    "name": "Contra ...e6",
+    "eco": "D02",
+    "book": 6,
+    "moves": [
+     "d4",
+     "d5",
+     "Nf3",
+     "e6",
+     "Bf4",
+     "Nf6",
+     "Nbd2",
+     "c5",
+     "e3",
+     "Qb6",
+     "Rb1",
+     "Bd6"
+    ]
+   },
+   {
+    "id": "op:londres:2",
+    "name": "Londres acelerado: 2.Af4",
+    "eco": "D00",
+    "book": 3,
+    "moves": [
+     "d4",
+     "d5",
+     "Bf4",
+     "c5",
+     "e3",
+     "Nf6",
+     "Nf3",
+     "Nc6",
+     "Nbd2",
+     "cxd4",
+     "exd4",
+     "Bf5"
+    ]
+   },
+   {
+    "id": "op:londres:3",
+    "name": "Contra el fianchetto",
+    "eco": "A48",
+    "book": 8,
+    "moves": [
+     "d4",
+     "Nf6",
+     "Nf3",
+     "g6",
+     "Bf4",
+     "Bg7",
+     "e3",
+     "d6",
+     "Nc3",
+     "O-O",
+     "Bc4",
+     "Nh5"
+    ]
+   },
+   {
+    "id": "op:londres:4",
+    "name": "Peón envenenado: ...Db6",
+    "eco": "D02",
+    "book": 9,
+    "moves": [
+     "d4",
+     "Nf6",
+     "Nf3",
+     "d5",
+     "Bf4",
+     "c5",
+     "e3",
+     "Qb6",
+     "Nc3",
+     "c4",
+     "Rb1",
+     "Bf5"
+    ]
+   },
+   {
+    "id": "op:londres:5",
+    "name": "Contra ...Cf6 y ...e6",
+    "eco": "A46",
+    "book": 5,
+    "moves": [
+     "d4",
+     "Nf6",
+     "Nf3",
+     "e6",
+     "Bf4",
+     "c5",
+     "e3",
+     "d5",
+     "c3",
+     "Bd6",
+     "Bb5+",
+     "Nc6"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "colle",
+  "side": "w",
+  "name": "Colle (tu sistema)",
+  "desc": "d4, Cf3, e3, Ad3, Cbd2 y 0-0, con la ruptura e4. Las líneas del libro, complemento de tu repertorio.",
+  "root": [
+   "d4"
+  ],
+  "vars": [
+   {
+    "id": "op:colle:0",
+    "name": "Colle clásico",
+    "eco": "D05",
+    "book": 16,
+    "moves": [
+     "d4",
+     "Nf6",
+     "Nf3",
+     "e6",
+     "e3",
+     "b6",
+     "Bd3",
+     "Bb7",
+     "O-O",
+     "c5",
+     "b3",
+     "Be7",
+     "Bb2",
+     "O-O",
+     "Nbd2",
+     "d5"
+    ]
+   },
+   {
+    "id": "op:colle:1",
+    "name": "Colle tradicional: c3",
+    "eco": "D05",
+    "book": 9,
+    "moves": [
+     "d4",
+     "Nf6",
+     "Nf3",
+     "e6",
+     "e3",
+     "c5",
+     "Bd3",
+     "d5",
+     "c3",
+     "b6",
+     "Nbd2",
+     "Bb7"
+    ]
+   },
+   {
+    "id": "op:colle:2",
+    "name": "Anti-Colle: ...Af5",
+    "eco": "D04",
+    "book": 6,
+    "moves": [
+     "d4",
+     "d5",
+     "Nf3",
+     "Nf6",
+     "e3",
+     "Bf5",
+     "c4",
+     "e6",
+     "Nc3",
+     "c6",
+     "Nh4",
+     "Bg6"
+    ]
+   },
+   {
+    "id": "op:colle:3",
+    "name": "Contra ...g6",
+    "eco": "D04",
+    "book": 8,
+    "moves": [
+     "d4",
+     "d5",
+     "Nf3",
+     "Nf6",
+     "e3",
+     "g6",
+     "Bd3",
+     "Bg7",
+     "b4",
+     "O-O",
+     "O-O",
+     "Nbd7"
+    ]
+   },
+   {
+    "id": "op:colle:4",
+    "name": "Colle-Zukertort: b3 y Ab2",
+    "eco": "D05",
+    "book": 9,
+    "moves": [
+     "d4",
+     "d5",
+     "Nf3",
+     "c5",
+     "e3",
+     "Nf6",
+     "Nbd2",
+     "e6",
+     "b3",
+     "cxd4",
+     "exd4",
+     "Ne4"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "gambito-dama",
+  "side": "w",
+  "name": "Gambito de dama",
+  "desc": "1.d4 d5 2.c4: ofreces un peón para ganar el centro. Presión sobre d5 y desarrollo armónico.",
+  "root": [
+   "d4"
+  ],
+  "vars": [
+   {
+    "id": "op:gambito-dama:0",
+    "name": "Rehusado: defensa ortodoxa",
+    "eco": "D60",
+    "book": 12,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "e6",
+     "Nf3",
+     "d5",
+     "Nc3",
+     "Be7",
+     "Bg5",
+     "O-O",
+     "e3",
+     "Nbd7"
+    ]
+   },
+   {
+    "id": "op:gambito-dama:1",
+    "name": "Rehusado: variante del cambio",
+    "eco": "D35",
+    "book": 14,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "e6",
+     "Nc3",
+     "Nf6",
+     "e3",
+     "Be7",
+     "cxd5",
+     "exd5",
+     "Bd3",
+     "O-O",
+     "Nf3",
+     "c6"
+    ]
+   },
+   {
+    "id": "op:gambito-dama:2",
+    "name": "Aceptado: defensa clásica",
+    "eco": "D26",
+    "book": 10,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "dxc4",
+     "Nf3",
+     "Nf6",
+     "e3",
+     "e6",
+     "Bxc4",
+     "c5",
+     "O-O",
+     "a6"
+    ]
+   },
+   {
+    "id": "op:gambito-dama:3",
+    "name": "Contragambito Albin: 2...e5",
+    "eco": "D08",
+    "book": 4,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "e5",
+     "dxe5",
+     "Ne7",
+     "cxd5",
+     "Qxd5",
+     "Bd2",
+     "Qxe5",
+     "Nc3",
+     "Nd5"
+    ]
+   },
+   {
+    "id": "op:gambito-dama:4",
+    "name": "Eslava: línea moderna",
+    "eco": "D11",
+    "book": 11,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "c6",
+     "Nf3",
+     "Nf6",
+     "g3",
+     "Bg4",
+     "Bg2",
+     "e6",
+     "O-O",
+     "Be7"
+    ]
+   },
+   {
+    "id": "op:gambito-dama:5",
+    "name": "Defensa Chigorin: 2...Cc6",
+    "eco": "D07",
+    "book": 9,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "Nc6",
+     "Nc3",
+     "e6",
+     "Nf3",
+     "Nf6",
+     "a3",
+     "Bd7",
+     "cxd5",
+     "exd5"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "siciliana",
+  "side": "b",
+  "name": "Siciliana",
+  "desc": "1.e4 c5: desequilibras desde la primera jugada. Juego por la columna c y contraataque.",
+  "root": [
+   "e4",
+   "c5"
+  ],
+  "vars": [
+   {
+    "id": "op:siciliana:0",
+    "name": "Najdorf: 5...a6",
+    "eco": "B98",
+    "book": 14,
+    "moves": [
+     "e4",
+     "c5",
+     "Nf3",
+     "d6",
+     "d4",
+     "cxd4",
+     "Nxd4",
+     "Nf6",
+     "Nc3",
+     "a6",
+     "Bg5",
+     "e6",
+     "f4",
+     "Be7"
+    ]
+   },
+   {
+    "id": "op:siciliana:1",
+    "name": "Dragón: ...g6 con ...d6",
+    "eco": "B72",
+    "book": 11,
+    "moves": [
+     "e4",
+     "c5",
+     "Nf3",
+     "d6",
+     "d4",
+     "cxd4",
+     "Nxd4",
+     "Nf6",
+     "Nc3",
+     "g6",
+     "Be3",
+     "Bg7"
+    ]
+   },
+   {
+    "id": "op:siciliana:2",
+    "name": "Dragón acelerado: ...g6 sin ...d6",
+    "eco": "B32",
+    "book": 8,
+    "moves": [
+     "e4",
+     "c5",
+     "Nf3",
+     "Nc6",
+     "d4",
+     "cxd4",
+     "Nxd4",
+     "g6",
+     "Nc3",
+     "Bg7",
+     "Be3",
+     "Nf6"
+    ]
+   },
+   {
+    "id": "op:siciliana:3",
+    "name": "Taimanov: ...e6 y ...Cc6",
+    "eco": "B46",
+    "book": 10,
+    "moves": [
+     "e4",
+     "c5",
+     "Nf3",
+     "e6",
+     "d4",
+     "cxd4",
+     "Nxd4",
+     "Nc6",
+     "Nc3",
+     "a6",
+     "Bf4",
+     "d6"
+    ]
+   },
+   {
+    "id": "op:siciliana:4",
+    "name": "Contra la Alapin: 2.c3",
+    "eco": "B22",
+    "book": 3,
+    "moves": [
+     "e4",
+     "c5",
+     "c3",
+     "d5",
+     "exd5",
+     "Qxd5",
+     "d4",
+     "Nf6",
+     "Nf3",
+     "Nc6",
+     "Be3",
+     "Bg4"
+    ]
+   },
+   {
+    "id": "op:siciliana:5",
+    "name": "Contra la cerrada: 2.Cc3",
+    "eco": "B25",
+    "book": 11,
+    "moves": [
+     "e4",
+     "c5",
+     "Nc3",
+     "Nc6",
+     "g3",
+     "g6",
+     "Bg2",
+     "Bg7",
+     "d3",
+     "d6",
+     "f4",
+     "e6"
+    ]
+   },
+   {
+    "id": "op:siciliana:6",
+    "name": "Smith-Morra aceptado",
+    "eco": "B21",
+    "book": 6,
+    "moves": [
+     "e4",
+     "c5",
+     "d4",
+     "cxd4",
+     "c3",
+     "dxc3",
+     "Nxc3",
+     "e6",
+     "Bf4",
+     "Nc6",
+     "Nf3",
+     "Bb4"
+    ]
+   },
+   {
+    "id": "op:siciliana:7",
+    "name": "Contra la Rossolimo: 3.Ab5",
+    "eco": "B30",
+    "book": 5,
+    "moves": [
+     "e4",
+     "c5",
+     "Nf3",
+     "Nc6",
+     "Bb5",
+     "g6",
+     "Bxc6",
+     "bxc6",
+     "O-O",
+     "Bg7",
+     "Re1",
+     "Rb8"
+    ]
+   },
+   {
+    "id": "op:siciliana:8",
+    "name": "Contra el Grand Prix: f4",
+    "eco": "B23",
+    "book": 5,
+    "moves": [
+     "e4",
+     "c5",
+     "Nc3",
+     "Nc6",
+     "f4",
+     "g6",
+     "Nf3",
+     "Bg7",
+     "d3",
+     "e6",
+     "Be3",
+     "d5"
+    ]
+   },
+   {
+    "id": "op:siciliana:9",
+    "name": "Contra 2.Ac4",
+    "eco": "B20",
+    "book": 3,
+    "moves": [
+     "e4",
+     "c5",
+     "Bc4",
+     "e6",
+     "Nf3",
+     "Nf6",
+     "Qe2",
+     "Nc6",
+     "e5",
+     "Nd5",
+     "d4",
+     "cxd4"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "caro-kann",
+  "side": "b",
+  "name": "Caro-Kann",
+  "desc": "1.e4 c6 y 2...d5: estructura sólida y alfil de casillas blancas fuera antes de ...e6.",
+  "root": [
+   "e4",
+   "c6"
+  ],
+  "vars": [
+   {
+    "id": "op:caro-kann:0",
+    "name": "Clásica: 4...Af5",
+    "eco": "B19",
+    "book": 14,
+    "moves": [
+     "e4",
+     "c6",
+     "d4",
+     "d5",
+     "Nd2",
+     "dxe4",
+     "Nxe4",
+     "Bf5",
+     "Ng3",
+     "Bg6",
+     "h4",
+     "h6",
+     "Nf3",
+     "Nd7"
+    ]
+   },
+   {
+    "id": "op:caro-kann:1",
+    "name": "Del avance: 3.e5",
+    "eco": "B12",
+    "book": 5,
+    "moves": [
+     "e4",
+     "c6",
+     "d4",
+     "d5",
+     "e5",
+     "Bf5",
+     "Nf3",
+     "e6",
+     "Be2",
+     "c5",
+     "c3",
+     "Nc6"
+    ]
+   },
+   {
+    "id": "op:caro-kann:2",
+    "name": "Del cambio: 3.exd5",
+    "eco": "B13",
+    "book": 8,
+    "moves": [
+     "e4",
+     "c6",
+     "d4",
+     "d5",
+     "exd5",
+     "cxd5",
+     "Nf3",
+     "Nc6",
+     "c4",
+     "Nf6",
+     "h3",
+     "e6"
+    ]
+   },
+   {
+    "id": "op:caro-kann:3",
+    "name": "Ataque Panov: c4",
+    "eco": "B14",
+    "book": 16,
+    "moves": [
+     "e4",
+     "c6",
+     "d4",
+     "d5",
+     "exd5",
+     "cxd5",
+     "c4",
+     "Nc6",
+     "Nc3",
+     "Nf6",
+     "Nf3",
+     "e6",
+     "cxd5",
+     "exd5",
+     "Bb5",
+     "Bg4"
+    ]
+   },
+   {
+    "id": "op:caro-kann:4",
+    "name": "Dos caballos",
+    "eco": "B10",
+    "book": 5,
+    "moves": [
+     "e4",
+     "c6",
+     "Nc3",
+     "d5",
+     "Nf3",
+     "dxe4",
+     "Nxe4",
+     "Nf6",
+     "Qe2",
+     "Nxe4",
+     "Qxe4",
+     "Qa5"
+    ]
+   },
+   {
+    "id": "op:caro-kann:5",
+    "name": "Karpov: 4...Cd7",
+    "eco": "B17",
+    "book": 8,
+    "moves": [
+     "e4",
+     "c6",
+     "d4",
+     "d5",
+     "Nd2",
+     "dxe4",
+     "Nxe4",
+     "Nd7",
+     "Nf3",
+     "Ngf6",
+     "Ng3",
+     "e6"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "francesa",
+  "side": "b",
+  "name": "Francesa",
+  "desc": "1.e4 e6 y 2...d5: cadena de peones y contraataque con ...c5 y ...f6.",
+  "root": [
+   "e4",
+   "e6",
+   "d4",
+   "d5"
+  ],
+  "vars": [
+   {
+    "id": "op:francesa:0",
+    "name": "Del avance: 3.e5",
+    "eco": "C02",
+    "book": 8,
+    "moves": [
+     "e4",
+     "e6",
+     "d4",
+     "d5",
+     "e5",
+     "c5",
+     "c3",
+     "Nc6",
+     "Nf3",
+     "Bd7",
+     "Be2",
+     "Nge7"
+    ]
+   },
+   {
+    "id": "op:francesa:1",
+    "name": "Winawer: 3...Ab4",
+    "eco": "C15",
+    "book": 6,
+    "moves": [
+     "e4",
+     "e6",
+     "d4",
+     "d5",
+     "Nc3",
+     "Bb4",
+     "e5",
+     "c5",
+     "a3",
+     "Bxc3+",
+     "bxc3",
+     "Ne7"
+    ]
+   },
+   {
+    "id": "op:francesa:2",
+    "name": "Tarrasch: 3.Cd2",
+    "eco": "C03",
+    "book": 5,
+    "moves": [
+     "e4",
+     "e6",
+     "d4",
+     "d5",
+     "Nd2",
+     "c5",
+     "Ngf3",
+     "Nc6",
+     "exd5",
+     "exd5",
+     "Bb5",
+     "Qe7+"
+    ]
+   },
+   {
+    "id": "op:francesa:3",
+    "name": "Clásica: 3...Cf6",
+    "eco": "C14",
+    "book": 12,
+    "moves": [
+     "e4",
+     "e6",
+     "d4",
+     "d5",
+     "Nc3",
+     "Nf6",
+     "Bg5",
+     "Be7",
+     "e5",
+     "Nfd7",
+     "Bxe7",
+     "Qxe7"
+    ]
+   },
+   {
+    "id": "op:francesa:4",
+    "name": "Del cambio: 3.exd5",
+    "eco": "C01",
+    "book": 7,
+    "moves": [
+     "e4",
+     "e6",
+     "d4",
+     "d5",
+     "exd5",
+     "exd5",
+     "Nf3",
+     "Nf6",
+     "Bd3",
+     "Bd6",
+     "O-O",
+     "O-O"
+    ]
+   },
+   {
+    "id": "op:francesa:5",
+    "name": "Rubinstein: 3...dxe4",
+    "eco": "C10",
+    "book": 6,
+    "moves": [
+     "e4",
+     "e6",
+     "d4",
+     "d5",
+     "Nc3",
+     "dxe4",
+     "Nxe4",
+     "Nd7",
+     "Nf3",
+     "Ngf6",
+     "Nxf6+",
+     "Nxf6"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "escandinava",
+  "side": "b",
+  "name": "Escandinava",
+  "desc": "1.e4 d5: atacas e4 de inmediato. Dama activa pronto y desarrollo sencillo.",
+  "root": [
+   "e4",
+   "d5",
+   "exd5"
+  ],
+  "vars": [
+   {
+    "id": "op:escandinava:0",
+    "name": "Principal: 3...Da5",
+    "eco": "B01",
+    "book": 6,
+    "moves": [
+     "e4",
+     "d5",
+     "exd5",
+     "Qxd5",
+     "Nc3",
+     "Qa5",
+     "d4",
+     "Nf6",
+     "Bd2",
+     "Bg4",
+     "Nf3",
+     "Qf5"
+    ]
+   },
+   {
+    "id": "op:escandinava:1",
+    "name": "Valenciana: 3...Dd8",
+    "eco": "B01",
+    "book": 6,
+    "moves": [
+     "e4",
+     "d5",
+     "exd5",
+     "Qxd5",
+     "Nc3",
+     "Qd8",
+     "d4",
+     "g6",
+     "Nf3",
+     "Nf6",
+     "Bf4",
+     "Bg7"
+    ]
+   },
+   {
+    "id": "op:escandinava:2",
+    "name": "Mieses-Kotroc: 2...Dxd5",
+    "eco": "B01",
+    "book": 4,
+    "moves": [
+     "e4",
+     "d5",
+     "exd5",
+     "Qxd5",
+     "Nc3",
+     "Qa5",
+     "d4",
+     "Nf6",
+     "Nf3",
+     "Bf5",
+     "Ne5",
+     "c6"
+    ]
+   },
+   {
+    "id": "op:escandinava:3",
+    "name": "Moderna: 2...Cf6",
+    "eco": "B01",
+    "book": 5,
+    "moves": [
+     "e4",
+     "d5",
+     "exd5",
+     "Nf6",
+     "d4",
+     "Qxd5",
+     "c4",
+     "Qe4+",
+     "Ne2",
+     "Bf5",
+     "Bf4",
+     "Na6"
+    ]
+   },
+   {
+    "id": "op:escandinava:4",
+    "name": "Gambito portugués: ...Ag4",
+    "eco": "B01",
+    "book": 6,
+    "moves": [
+     "e4",
+     "d5",
+     "exd5",
+     "Nf6",
+     "d4",
+     "Bg4",
+     "f3",
+     "Bd7",
+     "c4",
+     "c6",
+     "Nc3",
+     "cxd5"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "india-rey",
+  "side": "b",
+  "name": "India de Rey",
+  "desc": "1.d4 Cf6 2.c4 g6: dejas el centro al blanco y lo atacas después con ...e5 o ...c5.",
+  "root": [
+   "d4",
+   "Nf6",
+   "c4",
+   "g6"
+  ],
+  "vars": [
+   {
+    "id": "op:india-rey:0",
+    "name": "Ortodoxa: Cf3 y Ae2",
+    "eco": "E95",
+    "book": 15,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "g6",
+     "Nc3",
+     "Bg7",
+     "e4",
+     "d6",
+     "Nf3",
+     "O-O",
+     "Be2",
+     "e5",
+     "O-O",
+     "Nbd7",
+     "Re1"
+    ]
+   },
+   {
+    "id": "op:india-rey:1",
+    "name": "Sämisch: f3",
+    "eco": "E86",
+    "book": 14,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "g6",
+     "Nc3",
+     "Bg7",
+     "e4",
+     "d6",
+     "f3",
+     "O-O",
+     "Be3",
+     "e5",
+     "Nge2",
+     "c6"
+    ]
+   },
+   {
+    "id": "op:india-rey:2",
+    "name": "Fianchetto: g3",
+    "eco": "E60",
+    "book": 7,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "g6",
+     "Nf3",
+     "Bg7",
+     "g3",
+     "c6",
+     "Bg2",
+     "d5",
+     "cxd5",
+     "cxd5"
+    ]
+   },
+   {
+    "id": "op:india-rey:3",
+    "name": "Cuatro peones: f4",
+    "eco": "E77",
+    "book": 11,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "g6",
+     "Nc3",
+     "Bg7",
+     "e4",
+     "d6",
+     "Be2",
+     "O-O",
+     "f4",
+     "c5"
+    ]
+   },
+   {
+    "id": "op:india-rey:4",
+    "name": "Averbakh: Ae2 y Ag5",
+    "eco": "E73",
+    "book": 11,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "g6",
+     "Nc3",
+     "Bg7",
+     "e4",
+     "d6",
+     "Be2",
+     "O-O",
+     "Bg5",
+     "Nc6"
+    ]
+   },
+   {
+    "id": "op:india-rey:5",
+    "name": "Petrosian: d5",
+    "eco": "E92",
+    "book": 13,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "g6",
+     "Nc3",
+     "Bg7",
+     "e4",
+     "d6",
+     "Nf3",
+     "O-O",
+     "Be2",
+     "e5",
+     "d5"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "gdr",
+  "side": "b",
+  "name": "Gambito de dama rehusado",
+  "desc": "1.d4 d5 2.c4 e6: sostienes d5 con peones. Sólido, con ...c5 o ...e5 más tarde.",
+  "root": [
+   "d4"
+  ],
+  "vars": [
+   {
+    "id": "op:gdr:0",
+    "name": "Ortodoxa",
+    "eco": "D60",
+    "book": 12,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "e6",
+     "Nf3",
+     "d5",
+     "Nc3",
+     "Be7",
+     "Bg5",
+     "O-O",
+     "e3",
+     "Nbd7"
+    ]
+   },
+   {
+    "id": "op:gdr:1",
+    "name": "Del cambio",
+    "eco": "D35",
+    "book": 14,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "e6",
+     "Nc3",
+     "Nf6",
+     "e3",
+     "Be7",
+     "cxd5",
+     "exd5",
+     "Bd3",
+     "O-O",
+     "Nf3",
+     "c6"
+    ]
+   },
+   {
+    "id": "op:gdr:2",
+    "name": "Tartakower: ...b6",
+    "eco": "D58",
+    "book": 14,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "e6",
+     "Nf3",
+     "d5",
+     "Nc3",
+     "Be7",
+     "Bg5",
+     "h6",
+     "Bh4",
+     "O-O",
+     "e3",
+     "b6"
+    ]
+   },
+   {
+    "id": "op:gdr:3",
+    "name": "Lasker: ...Ce4",
+    "eco": "D56",
+    "book": 16,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "e6",
+     "Nf3",
+     "Nf6",
+     "Nc3",
+     "Nc6",
+     "Bg5",
+     "Be7",
+     "e3",
+     "O-O",
+     "Rc1",
+     "h6",
+     "Bh4",
+     "Ne4"
+    ]
+   },
+   {
+    "id": "op:gdr:4",
+    "name": "Ragozin: ...Ab4",
+    "eco": "D38",
+    "book": 8,
+    "moves": [
+     "d4",
+     "Nf6",
+     "c4",
+     "e6",
+     "Nf3",
+     "d5",
+     "Nc3",
+     "Bb4",
+     "Bg5",
+     "h6",
+     "Bxf6",
+     "Qxf6"
+    ]
+   },
+   {
+    "id": "op:gdr:5",
+    "name": "Cambridge Springs: ...Da5",
+    "eco": "D52",
+    "book": 13,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "c6",
+     "Nf3",
+     "Nf6",
+     "Nc3",
+     "e6",
+     "Bg5",
+     "Nbd7",
+     "e3",
+     "Qa5",
+     "cxd5"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "eslava",
+  "side": "b",
+  "name": "Eslava",
+  "desc": "1.d4 d5 2.c4 c6: sostienes d5 sin encerrar el alfil de c8.",
+  "root": [
+   "d4",
+   "d5",
+   "c4",
+   "c6"
+  ],
+  "vars": [
+   {
+    "id": "op:eslava:0",
+    "name": "Checa: 4...dxc4 5.a4 Af5",
+    "eco": "D17",
+    "book": 10,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "c6",
+     "Nf3",
+     "Nf6",
+     "Nc3",
+     "dxc4",
+     "a4",
+     "Bf5",
+     "e3",
+     "e6"
+    ]
+   },
+   {
+    "id": "op:eslava:1",
+    "name": "Del cambio: cxd5",
+    "eco": "D13",
+    "book": 8,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "c6",
+     "Nf3",
+     "Nf6",
+     "cxd5",
+     "cxd5",
+     "Nc3",
+     "e6",
+     "Bg5",
+     "Qb6"
+    ]
+   },
+   {
+    "id": "op:eslava:2",
+    "name": "Tranquila: e3",
+    "eco": "D11",
+    "book": 7,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "c6",
+     "Nf3",
+     "Nf6",
+     "e3",
+     "Bf5",
+     "Nc3",
+     "e6",
+     "Nh4",
+     "Bg6"
+    ]
+   },
+   {
+    "id": "op:eslava:3",
+    "name": "Chebanenko: ...a6",
+    "eco": "D15",
+    "book": 10,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "c6",
+     "Nf3",
+     "Nf6",
+     "Nc3",
+     "a6",
+     "e3",
+     "Bf5",
+     "Nh4",
+     "Bc8"
+    ]
+   },
+   {
+    "id": "op:eslava:4",
+    "name": "Semieslava: Merano",
+    "eco": "D48",
+    "book": 16,
+    "moves": [
+     "d4",
+     "d5",
+     "c4",
+     "c6",
+     "Nc3",
+     "Nf6",
+     "e3",
+     "e6",
+     "Nf3",
+     "Nbd7",
+     "Bd3",
+     "dxc4",
+     "Bxc4",
+     "b5",
+     "Bd3",
+     "a6"
+    ]
+   }
+  ]
+ }
+]

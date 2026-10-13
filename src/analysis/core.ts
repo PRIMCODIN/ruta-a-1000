@@ -6,7 +6,10 @@ import {
 import { engine } from '../engine/engine'
 
 /** Evaluaciones desde el punto de vista de las blancas (cp, mates como ±10000) para cada posición 0..n. */
-export type RawAnalysis = { v: 1; evals: number[]; pv: string[][] }
+export type RawAnalysis = { v: 1; evals: number[]; pv: string[][]; eng?: string }
+
+/** Motor y fuerza con los que se analizan las partidas nuevas. Si cambia, se reanalizan. */
+export const ENGINE_TAG = 'sf17l'
 
 export type GameRow = {
   id?: string
@@ -48,8 +51,12 @@ export type Ply = {
 const PH: Phase[] = ['apertura', 'medio', 'final']
 const zero = () => ({ apertura: 0, medio: 0, final: 0 })
 
+export type OpeningErr = { i: number; san: string; best: string; bestSan: string; loss: number }
+
 export type GameStats = {
-  v: 2
+  v: 3
+  /** Primeras 24 jugadas (SAN inglesa) y tus errores en ellas, para «Mi apertura». */
+  open: { path: string[]; errs: OpeningErr[] }
   moves: Record<Phase, number>
   loss: Record<Phase, number>
   blunders: Record<Phase, number>
@@ -144,7 +151,7 @@ function bucketOf(plies: Ply[], color: 'w' | 'b') {
 export function computeStats(game: GameRow, plies: Ply[]): GameStats {
   const me = game.color
   const st: GameStats = {
-    v: 2, moves: zero(), loss: zero(), blunders: zero(), mistakes: zero(), inaccuracies: zero(), accuracy: 0,
+    v: 3, open: { path: plies.slice(0, 24).map((p) => p.san), errs: [] }, moves: zero(), loss: zero(), blunders: zero(), mistakes: zero(), inaccuracies: zero(), accuracy: 0,
     blunderKinds: { toAttacked: 0, ignoredThreat: 0, allowsCheck: 0, quiet: 0, uncovers: 0 },
     hung: {}, firstBlunderMove: null, maxWin: 0, hadWinning: false, endgameEntry: null, oppBlunders: 0, punished: 0,
     mated: false, matedHomeRank: false, forkE4: false, pinG5: false, stalemateWhileWinning: false,
@@ -208,6 +215,10 @@ export function computeStats(game: GameRow, plies: Ply[]): GameStats {
       }
     } else if (p.loss >= 20) st.mistakes[p.phase]++
     else if (p.loss >= 10) st.inaccuracies[p.phase]++
+    if (p.i < 24 && p.loss >= 8 && p.best && p.best !== p.uci) {
+      const bm = tryMove(new Chess(p.fenBefore), uciToMove(p.best))
+      if (bm) st.open.errs.push({ i: p.i, san: p.san, best: p.best, bestSan: bm.san, loss: Math.round(p.loss * 10) / 10 })
+    }
     if (p.clock !== null) myClock = p.clock
   })
   const myMoves = PH.reduce((s, ph) => s + st.moves[ph], 0)
@@ -241,7 +252,7 @@ export function computeStats(game: GameRow, plies: Ply[]): GameStats {
 /* ------------------------------------------------------------------ */
 /* Análisis con el motor en el navegador                                */
 
-export async function analyzePgn(pgn: string, depth: number, onPly?: (i: number, n: number) => void): Promise<RawAnalysis> {
+export async function analyzePgn(pgn: string, nodes: number, onPly?: (i: number, n: number) => void): Promise<RawAnalysis> {
   const g = loadGame(pgn)
   const hist = g.history({ verbose: true })
   const b = new Chess()
@@ -256,7 +267,7 @@ export async function analyzePgn(pgn: string, depth: number, onPly?: (i: number,
       evals.push(0)
       pv.push([])
     } else {
-      const [l] = await engine.analyse(b.fen(), { depth })
+      const [l] = await engine.analyse(b.fen(), { nodes })
       const cp = l?.cp ?? 0
       evals.push(white ? cp : -cp)
       pv.push((l?.pv ?? []).slice(0, 4))
@@ -264,7 +275,7 @@ export async function analyzePgn(pgn: string, depth: number, onPly?: (i: number,
     onPly?.(i, hist.length)
     if (i < hist.length) b.move(hist[i].san)
   }
-  return { v: 1, evals, pv }
+  return { v: 1, evals, pv, eng: ENGINE_TAG }
 }
 
 /* ------------------------------------------------------------------ */
@@ -327,7 +338,7 @@ export async function generatePuzzles(game: GameRow, plies: Ply[], max = 3): Pro
   const out: Puzzle[] = []
   for (const p of cands) {
     if (out.length >= max) break
-    const lines = await engine.analyse(p.fenBefore, { depth: 12, multipv: 3 })
+    const lines = await engine.analyse(p.fenBefore, { nodes: 400000, multipv: 3 })
     if (!lines.length) continue
     const sc = lines.map((l) => ({ u: l.pv[0], w: winPct(l.cp), l }))
     const bestW = sc[0].w

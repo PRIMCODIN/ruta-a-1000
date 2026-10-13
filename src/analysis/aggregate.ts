@@ -13,6 +13,7 @@ export type GameLite = {
   opp_elo: number | null
   termination: string | null
   stats: GameStats | null
+  eng?: string | null
 }
 
 const sum = (a: number[]) => a.reduce((s, x) => s + x, 0)

@@ -7,6 +7,7 @@ import { es, PHASE_LABEL, threatsAgainst, tryMove, uciToMove, type Phase } from 
 import { MOTIF_LABEL, type Puzzle } from '../analysis/core'
 import { useStore, type StoredPuzzle } from '../lib/store'
 import { go } from '../lib/router'
+import { setQueue } from '../lib/queue'
 
 const PAGE = 24
 
@@ -29,7 +30,7 @@ export default function Mistakes() {
           <h1>Posiciones reales de tus partidas</h1>
           <p className="muted" style={{ margin: 0 }}>En cada una jugaste algo que perdió mucho. Encuentra lo que no viste. Las nuevas partidas añaden ejercicios solas.</p>
         </div>
-        <button type="button" className="btn primary" disabled={!due.length} onClick={() => go(`errores/${due[0].id}`)}>Resolver {due.length} pendientes</button>
+        <button type="button" className="btn primary" disabled={!due.length} onClick={() => { setQueue('err', due.map((p) => p.id)); go(`errores/${due[0].id}`) }}>Resolver {due.length} pendientes</button>
       </div>
       {!all.length && <div className="banner">Aún no hay ejercicios. Importa tus partidas desde <a href="#/ajustes">Ajustes</a> o sincroniza Chess.com en <a href="#/partidas">Partidas</a>.</div>}
       <div className="stack" style={{ gap: 8 }}>
@@ -50,7 +51,7 @@ export default function Mistakes() {
         {list.slice(0, n).map((p) => {
           const r = store.review(p.id)
           return (
-            <button key={p.id} type="button" className="thumb" onClick={() => go(`errores/${p.id}`)}>
+            <button key={p.id} type="button" className="thumb" onClick={() => { setQueue('err', list.map((x) => x.id)); go(`errores/${p.id}`) }}>
               <Board fen={p.fen} orientation={p.color} mini lastMove={p.prev ? [p.prev.slice(0, 2), p.prev.slice(2, 4)] : null} />
               <div className="meta stack" style={{ gap: 4 }}>
                 <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -245,7 +246,7 @@ export function PuzzleSolver({ puzzle: p, onDone, header }: { puzzle: StoredPuzz
               <span className="mono dim" style={{ fontSize: 12.5 }}>{p.line}</span>
             </div>
             <div className="row">
-              <button type="button" className="btn primary" onClick={() => onDone(!!ok)}>Siguiente</button>
+              <button type="button" className="btn primary" onClick={() => onDone(!!ok)}>Siguiente ejercicio →</button>
               <button type="button" className="btn" onClick={() => { setStage('solve'); setTries(0); setHelped(true); setHintLevel(0); reset(); setBubble({ kind: 'info', title: p.prompt }) }}>Intentar otra vez</button>
             </div>
           </div>

@@ -113,16 +113,34 @@ export function GameReview({ id }: { id: string }) {
   const plies = useMemo(() => (game?.analysis ? buildPlies(game.pgn, game.analysis) : []), [game])
   const myErrors = plies.filter((p) => p.color === game?.color && p.loss >= 20)
 
+  const movesBox = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') setI((x) => Math.min(x + 1, plies.length))
-      if (e.key === 'ArrowLeft') setI((x) => Math.max(x - 1, 0))
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      const map: Record<string, (x: number) => number> = {
+        ArrowRight: (x) => Math.min(x + 1, plies.length),
+        ArrowLeft: (x) => Math.max(x - 1, 0),
+        Home: () => 0,
+        End: () => plies.length,
+      }
+      const f = map[e.key]
+      if (!f) return
+      e.preventDefault()
+      setI(f)
     }
     window.addEventListener('keydown', key)
     return () => window.removeEventListener('keydown', key)
   }, [plies.length])
   useEffect(() => {
     if (i > 0 && plies[i - 1]) sfx.forSan(plies[i - 1].san)
+    // mantiene la jugada actual visible dentro de la lista, sin mover la página
+    const box = movesBox.current
+    const cur = box?.querySelector<HTMLElement>('button.cur')
+    if (box && cur) {
+      const top = cur.offsetTop
+      if (top < box.scrollTop + 4 || top > box.scrollTop + box.clientHeight - 32) box.scrollTop = Math.max(0, top - box.clientHeight / 2)
+    } else if (box && i === 0) box.scrollTop = 0
   }, [i]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (err) return <div className="banner err">No se pudo abrir la partida: {err}</div>
@@ -167,38 +185,42 @@ export function GameReview({ id }: { id: string }) {
             <EvalBar cpWhite={cpWhite} orientation={game.color} />
             <Board fen={fen} orientation={game.color} lastMove={ply ? [ply.uci.slice(0, 2), ply.uci.slice(2, 4)] : null} arrows={arrows} marks={marks} />
           </div>
+          <div className="navbar" role="group" aria-label="Moverse por la partida">
+            <button type="button" className="btn icon" onClick={() => setI(0)} aria-label="Inicio" title="Inicio (Inicio)">⏮</button>
+            <button type="button" className="btn icon" onClick={() => setI((x) => Math.max(0, x - 1))} aria-label="Anterior" title="Anterior (←)">◀</button>
+            <button type="button" className="btn icon" onClick={() => setI((x) => Math.min(plies.length, x + 1))} aria-label="Siguiente" title="Siguiente (→)">▶</button>
+            <button type="button" className="btn icon" onClick={() => setI(plies.length)} aria-label="Final" title="Final (Fin)">⏭</button>
+            <span className="dim mono num" style={{ fontSize: 12, minWidth: 64, textAlign: 'right' }}>{i}/{plies.length}</span>
+          </div>
           <EvalGraph plies={plies} evals={game.analysis?.evals ?? []} me={game.color} cur={i} onPick={setI} />
         </div>
         <div className="card stack">
-          {ply ? (
-            <Coach
-              kind={cls === 'blunder' || cls === 'mistake' ? 'bad' : cls ? 'info' : 'good'}
-              title={`${Math.floor(ply.i / 2) + 1}${ply.color === 'w' ? '.' : '...'} ${es(ply.san)} · ${cls ? CLS_LABEL[cls] : ply.loss < 2 ? 'Buena jugada' : 'Correcta'}`}
-            >
-              <div className="dim" style={{ color: '#5c5a57' }}>{PHASE_LABEL[ply.phase]} · {ply.color === game.color ? 'tu jugada' : 'jugada del rival'}{ply.clock !== null ? ` · reloj ${fmtClock(ply.clock)}` : ''}</div>
-              {cls && ply.best && (
-                <div style={{ marginTop: 4 }}>
-                  Probabilidad de ganar: {Math.round(ply.wpBefore)}% → {Math.round(ply.wpAfter)}%. Mejor era <span className="mv">{pvToSan(ply.fenBefore, [ply.best], 1).replace(/^\d+\.+\s?/, '')}</span> (flecha verde).
-                  <div className="mono" style={{ fontSize: 12.5, marginTop: 4 }}>{pvToSan(ply.fenBefore, ply.pv, 6)}</div>
-                </div>
-              )}
-              {cls && ply.replyPv[0] && <div style={{ marginTop: 4 }}>Respuesta del rival que lo castiga: <span className="mv">{pvToSan(ply.fenAfter, ply.replyPv, 3)}</span></div>}
-            </Coach>
-          ) : (
-            <Coach title="Revisión de la partida">Pulsa en la gráfica o en una jugada, o usa <kbd>←</kbd> <kbd>→</kbd>. Tus errores llevan marca roja (??) o naranja (?).</Coach>
-          )}
+          <div style={{ minHeight: 132 }}>
+            {ply ? (
+              <Coach
+                kind={cls === 'blunder' || cls === 'mistake' ? 'bad' : cls ? 'info' : 'good'}
+                title={`${Math.floor(ply.i / 2) + 1}${ply.color === 'w' ? '.' : '...'} ${es(ply.san)} · ${cls ? CLS_LABEL[cls] : ply.loss < 2 ? 'Buena jugada' : 'Correcta'}`}
+              >
+                <div className="dim">{PHASE_LABEL[ply.phase]} · {ply.color === game.color ? 'tu jugada' : 'jugada del rival'}{ply.clock !== null ? ` · reloj ${fmtClock(ply.clock)}` : ''}</div>
+                {cls && ply.best && (
+                  <div style={{ marginTop: 4 }}>
+                    Probabilidad de ganar: {Math.round(ply.wpBefore)}% → {Math.round(ply.wpAfter)}%. Mejor era <span className="mv">{pvToSan(ply.fenBefore, [ply.best], 1).replace(/^\d+\.+\s?/, '')}</span> (flecha verde).
+                    <div className="mono dim" style={{ fontSize: 12.5, marginTop: 4 }}>{pvToSan(ply.fenBefore, ply.pv, 6)}</div>
+                  </div>
+                )}
+                {cls && ply.replyPv[0] && <div style={{ marginTop: 4 }}>Respuesta del rival que lo castiga: <span className="mv">{pvToSan(ply.fenAfter, ply.replyPv, 3)}</span></div>}
+              </Coach>
+            ) : (
+              <Coach title="Revisión de la partida">Usa los botones bajo el tablero, pulsa en la gráfica o en una jugada, o las flechas <kbd>←</kbd> <kbd>→</kbd> del teclado. Tus errores llevan marca roja (??) o naranja (?).</Coach>
+            )}
+          </div>
           <label className="row" style={{ fontSize: 13 }}><input type="checkbox" checked={showBest} onChange={(e) => setShowBest(e.target.checked)} /> Mostrar la mejor jugada en mis errores</label>
-          <div className="moves">
+          <div className="moves" ref={movesBox} style={{ position: 'relative' }}>
             {Array.from({ length: Math.ceil(plies.length / 2) }, (_, k) => (
               <MoveRow key={k} k={k} plies={plies} cur={i} me={game.color} onPick={setI} />
             ))}
           </div>
-          <div className="row">
-            <button type="button" className="btn" onClick={() => setI(0)} aria-label="Inicio">⏮</button>
-            <button type="button" className="btn" onClick={() => setI(Math.max(0, i - 1))} aria-label="Anterior">◀</button>
-            <button type="button" className="btn" onClick={() => setI(Math.min(plies.length, i + 1))} aria-label="Siguiente">▶</button>
-            <button type="button" className="btn" onClick={() => setI(plies.length)} aria-label="Final">⏭</button>
-          </div>
+          {game.analysis?.eng !== 'sf17l' && game.source !== 'seed' && <p className="dim" style={{ fontSize: 12.5, margin: 0 }}>Esta partida se analizó con el motor antiguo. Se reanaliza sola al abrir la app.</p>}
         </div>
       </div>
     </div>
@@ -232,12 +254,12 @@ function EvalGraph({ plies, evals, me, cur, onPick }: { plies: Ply[]; evals: num
   }
   const pts = evals.map((e, k) => `${x(k)},${y(e)}`).join(' ')
   return (
-    <svg className="chart" viewBox={`0 0 ${W} ${H}`} style={{ marginTop: 10, borderRadius: 4, cursor: 'pointer', background: me === 'w' ? '#403d39' : '#fff' }}
+    <svg className="chart" viewBox={`0 0 ${W} ${H}`} style={{ marginTop: 10, borderRadius: 4, cursor: 'pointer', background: me === 'w' ? '#2b3348' : '#eef2f7' }}
       onClick={(e) => {
         const r = (e.currentTarget as SVGElement).getBoundingClientRect()
         onPick(Math.round(((e.clientX - r.left) / r.width) * n))
       }} role="img" aria-label="Gráfica de evaluación">
-      <polygon points={`0,${H} ${pts} ${W},${H}`} fill={me === 'w' ? '#fff' : '#403d39'} />
+      <polygon points={`0,${H} ${pts} ${W},${H}`} fill={me === 'w' ? '#eef2f7' : '#2b3348'} />
       <line x1="0" x2={W} y1={H / 2} y2={H / 2} stroke="#8a8784" strokeDasharray="3 3" />
       {plies.map((p) => {
         const c = p.color === me ? CLS(p) : null

@@ -16,7 +16,7 @@ export default function ProgressView() {
   const newGames = games.filter((g) => g.source !== 'seed').length
   const win = Math.max(20, Math.min(40, Math.floor(games.length / 8)))
 
-  const s = (key: string, color = '#81b64c') => ({ name: metricByKey[key].short, color, pts: rolling(games, metricByKey[key], win) })
+  const s = (key: string, color = '#5eead4') => ({ name: metricByKey[key].short, color, pts: rolling(games, metricByKey[key], win) })
   const rating = ratingSeries(games)
   const last7 = store.attempts.filter((a) => Date.now() - new Date(a.at).getTime() < 7 * 86400000)
   const solvedRate = last7.length ? last7.filter((a) => a.ok).length / last7.length : null

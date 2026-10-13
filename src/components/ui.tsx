@@ -9,7 +9,7 @@ export function EvalBar({ cpWhite, orientation }: { cpWhite: number | null; orie
   return (
     <div className="evalbar" style={flip ? { transform: 'rotate(180deg)' } : undefined} aria-label={`Evaluación ${label}`}>
       <div className="w" style={{ height: `${w}%` }} />
-      <span className="lbl" style={{ bottom: 4, transform: flip ? 'rotate(180deg)' : undefined, color: w >= 50 ? '#403d39' : '#fff', top: w >= 50 ? undefined : 4 }}>
+      <span className="lbl" style={{ bottom: w >= 50 ? 4 : undefined, top: w >= 50 ? undefined : 4, transform: flip ? 'rotate(180deg)' : undefined, color: w >= 50 ? '#1d2b4a' : '#eef2f7' }}>
         {label}
       </span>
     </div>
@@ -43,9 +43,9 @@ export function Progress({ value }: { value: number }) {
 export function ArrowLegend() {
   return (
     <div className="legend">
-      <span><i style={{ background: 'var(--green)' }} />Lo bueno</span>
-      <span><i style={{ background: 'var(--red)' }} />Amenaza o error</span>
-      <span><i style={{ background: 'var(--orange)' }} />Pista / idea</span>
+      <span><i style={{ background: '#14b8a6' }} />Lo bueno</span>
+      <span><i style={{ background: '#f0483c' }} />Amenaza o error</span>
+      <span><i style={{ background: '#f5a524' }} />Pista / idea</span>
     </div>
   )
 }
@@ -58,6 +58,7 @@ const I = (d: string) => (
 export const Icons = {
   hoy: I('M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'),
   repertorio: I('M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5zM4 21a2 2 0 0 1 2-2h13'),
+  aperturas: I('M5 21h14M7 21v-3h10v3M9 18l1-7M15 18l-1-7M8 11h8M10 11V8l2-5 2 5v3'),
   errores: I('M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z'),
   finales: I('M9 21h6M10 17h4M12 3a2 2 0 0 1 2 2c0 1-1 2-1 2h-2s-1-1-1-2a2 2 0 0 1 2-2zM8 17l1-8h6l1 8'),
   partidas: I('M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z'),
