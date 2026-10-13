@@ -8,7 +8,7 @@ export function EvalBar({ cpWhite, orientation }: { cpWhite: number | null; orie
   const flip = orientation === 'b'
   return (
     <div className="evalbar" style={flip ? { transform: 'rotate(180deg)' } : undefined} aria-label={`Evaluación ${label}`}>
-      <div className="w" style={{ height: `${w}%` }} />
+      <div className="w" style={{ transform: `scaleY(${w / 100})` }} />
       <span className="lbl" style={{ bottom: w >= 50 ? 4 : undefined, top: w >= 50 ? undefined : 4, transform: flip ? 'rotate(180deg)' : undefined, color: w >= 50 ? '#2a2d33' : '#eef0ee' }}>
         {label}
       </span>
@@ -39,7 +39,7 @@ export function Mastery({ box }: { box: number }) {
 }
 
 export function Progress({ value }: { value: number }) {
-  return <div className="progress"><i style={{ width: `${Math.max(0, Math.min(100, value))}%` }} /></div>
+  return <div className="progress" role="progressbar" aria-valuenow={Math.round(value)} aria-valuemin={0} aria-valuemax={100}><i style={{ transform: `scaleX(${Math.max(0, Math.min(100, value)) / 100})` }} /></div>
 }
 
 export function ArrowLegend() {
