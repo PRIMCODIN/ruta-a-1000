@@ -43,6 +43,9 @@ export const db = {
     if (!ids.length) return []
     return check(await supabase.from('games').select('*').in('id', ids)) as (GameRow & { id: string })[]
   },
+  async saveAnalysis(id: string, analysis: RawAnalysis, stats: unknown) {
+    check(await supabase.from('games').update({ analysis, stats }).eq('id', id))
+  },
   async deletePuzzlesOfGame(gameId: string) {
     check(await supabase.from('puzzles').delete().eq('game_id', gameId))
   },

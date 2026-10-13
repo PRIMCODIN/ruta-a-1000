@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { analyzePgn, buildPlies, computeStats, generatePuzzles, ENGINE_TAG, type GameRow, type Puzzle } from '../analysis/core'
+import { buildPlies, computeStats, generatePuzzles, ENGINE_TAG, type GameRow, type Puzzle } from '../analysis/core'
+import { deepAnalyze, loadBook, reviewGame, reviewSummary } from '../analysis/review'
 import { db } from './db'
 import { useStore } from './store'
 
@@ -121,9 +122,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       if (cancelled.current) break
       patch({ label: `${row.color === 'w' ? 'Blancas' : 'Negras'} · ${row.played_at.slice(0, 10)} · ${row.opening ?? ''}`, plyDone: 0, plyTotal: 0 })
       try {
-        const analysis = await analyzePgn(row.pgn, nodes, (i, total) => patch({ plyDone: i, plyTotal: total }))
+        const analysis = (await deepAnalyze(row.pgn, nodes, (i, total) => patch({ plyDone: i, plyTotal: total })))!
         const plies = buildPlies(row.pgn, analysis)
-        const stats = computeStats(row, plies)
+        const stats = { ...computeStats(row, plies), review: reviewSummary(reviewGame(row.pgn, row.color, analysis, await loadBook()), row.color) }
         const puzzles: Puzzle[] = await generatePuzzles(row, plies)
         await db.upsertGames([{ ...row, analysis, stats }])
         if (puzzles.length) {
@@ -226,7 +227,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         if (cancelled.current) break
         patch({ label: `Recalculando métricas (${Math.min(i + 100, restat.length)} de ${restat.length})…`, total: 0 })
         const rows = await db.gamesFull(restat.slice(i, i + 100))
-        await db.upsertGames(rows.map((r) => ({ ...r, stats: computeStats(r, buildPlies(r.pgn, r.analysis!)) })))
+        await db.upsertGames(rows.map((r) => ({ ...r, stats: { ...computeStats(r, buildPlies(r.pgn, r.analysis!)), review: r.stats?.review } })))
       }
       if (restat.length) await store.reload() // «Mi apertura» ya puede usar las métricas nuevas
       patch({ total: reanalyze.length, done: 0 })
@@ -235,9 +236,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         const [row] = await db.gamesFull([id])
         if (!row) continue
         patch({ label: `Reanalizando con Stockfish 17 · ${row.played_at.slice(0, 10)}`, plyDone: 0, plyTotal: 0 })
-        const analysis = await analyzePgn(row.pgn, nodes, (k, total) => patch({ plyDone: k, plyTotal: total }))
+        const analysis = (await deepAnalyze(row.pgn, nodes, (k, total) => patch({ plyDone: k, plyTotal: total })))!
         const plies = buildPlies(row.pgn, analysis)
-        const stats = computeStats(row, plies)
+        const stats = { ...computeStats(row, plies), review: reviewSummary(reviewGame(row.pgn, row.color, analysis, await loadBook()), row.color) }
         const puzzles = await generatePuzzles(row, plies)
         await db.upsertGames([{ ...row, analysis, stats }])
         await db.deletePuzzlesOfGame(id)

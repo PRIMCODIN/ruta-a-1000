@@ -30,6 +30,7 @@ type Store = {
   isDue: (id: string) => boolean
   grade: (id: string, kind: Review['kind'], ok: boolean) => void
   setSettings: (s: Partial<Settings>) => Promise<void>
+  patchGame: (id: string, patch: Partial<GameLite>) => void
 }
 
 const Ctx = createContext<Store | null>(null)
@@ -86,6 +87,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return !r || r.due <= todayStr()
       },
       grade,
+      patchGame: (id, patch) => setGames((gs) => gs.map((g) => (g.id === id ? { ...g, ...patch } : g))),
       setSettings: async (s) => {
         await db.saveSettings(s)
         setS((prev) => ({ ...prev, ...s }))

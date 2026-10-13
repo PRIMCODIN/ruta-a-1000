@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as RPE } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent as RPE, type ReactNode } from 'react'
 import { Chess, type Square, type PieceSymbol } from 'chess.js'
 import { FILES } from '../lib/chess-utils'
 
 export type ArrowColor = 'green' | 'red' | 'orange' | 'blue'
 export type Arrow = { from: string; to: string; color?: ArrowColor; dashed?: boolean }
-export type Mark = { sq: string; color?: ArrowColor; badge?: string }
+export type Mark = { sq: string; color?: ArrowColor; badge?: string; icon?: ReactNode }
 export type MoveInput = { from: Square; to: Square; promotion?: PieceSymbol }
 
 type Props = {
@@ -144,7 +144,7 @@ export default function Board({
           {isLast && <span className="hl last" />}
           {sel === sq && <span className="hl sel" />}
           {flashOn && flashOn.sq === sq && <span className={`hl flash-${flashOn.kind}`} />}
-          {mk && !mk.badge && <span className={`ring ring-${mk.color ?? 'orange'}`} />}
+          {mk && !mk.badge && !mk.icon && <span className={`ring ring-${mk.color ?? 'orange'}`} />}
           {d && <span className={d.captured ? 'dest cap' : 'dest'} />}
           {coords && !mini && x === 0 && <span className="coord rank">{sq[1]}</span>}
           {coords && !mini && y === 7 && <span className="coord file">{sq[0]}</span>}
@@ -178,9 +178,12 @@ export default function Board({
             />
           )
         })}
-        {marks.filter((m) => m.badge).map((m) => {
+        {marks.filter((m) => m.badge || m.icon).map((m) => {
           const [x, y] = xy(m.sq)
-          return (
+          // en el borde, el icono se mete dentro del tablero para que no se corte
+          return m.icon ? (
+            <span key={`b${m.sq}`} className="badge badge-icon" style={{ left: `${(x + 1) * 12.5}%`, top: `${y * 12.5}%`, transform: `translate(${x === 7 ? -100 : -62}%, ${y === 0 ? 0 : -38}%)` }}>{m.icon}</span>
+          ) : (
             <span key={`b${m.sq}`} className={`badge badge-${m.color ?? 'orange'}`} style={{ left: `${(x + 1) * 12.5}%`, top: `${y * 12.5}%` }}>
               {m.badge}
             </span>

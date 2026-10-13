@@ -4,9 +4,10 @@ import {
   type Phase,
 } from '../lib/chess-utils'
 import { engine } from '../engine/engine'
+import type { ReviewSummary } from './review'
 
 /** Evaluaciones desde el punto de vista de las blancas (cp, mates como ±10000) para cada posición 0..n. */
-export type RawAnalysis = { v: 1; evals: number[]; pv: string[][]; eng?: string }
+export type RawAnalysis = { v: 1 | 2; evals: number[]; pv: string[][]; eng?: string; alt?: (number | null)[]; nodes?: number }
 
 /** Motor y fuerza con los que se analizan las partidas nuevas. Si cambia, se reanalizan. */
 export const ENGINE_TAG = 'sf17l'
@@ -82,6 +83,8 @@ export type GameStats = {
   hasClock: boolean
   bucket: string
   plies: number
+  /** Resumen de la revisión completa (precisión tipo Lichess y jugadas por clase, tuyas). */
+  review?: ReviewSummary
 }
 
 const CLK = /\[%clk (\d+):(\d+):(\d+(?:\.\d+)?)\]/g
