@@ -52,7 +52,7 @@ export default function Games() {
         <div>
           <h1>Tus partidas</h1>
           <p className="lead">{store.settings.last_sync_at ? `Última actualización: ${new Date(store.settings.last_sync_at).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })}.` : 'Aún no has sincronizado Chess.com.'}</p>
-          <p className="meta">{store.games.length} partidas analizadas</p>
+          <p className="meta">{store.games.length} partidas{(() => { const p = store.games.filter((g) => !g.av).length; return p ? `, ${p} sin analizar (se analizan al abrirlas)` : '' })()}</p>
         </div>
         <SyncButtons />
       </div>
@@ -78,9 +78,9 @@ export default function Games() {
                   <td className="num">{fmtTc(g.time_control)}</td>
                   <td className="num">{g.my_elo ?? '-'} <span className="dim">vs {g.opp_elo ?? '-'}</span></td>
                   <td className="num">{g.stats ? `${g.stats.accuracy.toFixed(0)}%` : '-'}</td>
-                  <td className="num" style={{ color: b ? 'var(--bad)' : 'var(--good)' }}>{b ?? '-'}</td>
+                  <td className="num" style={{ color: b == null ? undefined : b ? 'var(--bad)' : 'var(--good)' }}>{b ?? '-'}</td>
                   <td><ReviewBadges g={g} /></td>
-                  <td className="ellipsis">{g.stats?.bucket.replace(/^(Blancas|Negras) · /, '').replace('—', '') ?? ''}</td>
+                  <td className="ellipsis">{g.stats?.bucket.replace(/^(Blancas|Negras) · /, '').replace('—', '') ?? g.opening ?? ''}</td>
                 </tr>
               )
             })}
@@ -104,9 +104,9 @@ const fmtTc = (tc: string | null) => {
 
 
 /** Lo destacado de la revisión completa de una partida, si ya se hizo. */
-function ReviewBadges({ g }: { g: { stats?: { review?: { acc: number; c: Record<string, number | undefined> } } | null } }) {
+function ReviewBadges({ g }: { g: { av?: string | null; stats?: { review?: { acc: number; c: Record<string, number | undefined> } } | null } }) {
   const r = g.stats?.review
-  if (!r) return <span className="dim" title="Se revisa al abrirla">-</span>
+  if (!r) return <span className="dim" title="Se analiza al abrirla">{g.av ? '-' : 'Sin analizar'}</span>
   return (
     <span className="row rbadges" style={{ gap: 8, flexWrap: 'nowrap' }}>
       <span className="num" title="Precisión de la revisión">{r.acc.toFixed(1).replace('.', ',')}</span>

@@ -7,14 +7,14 @@ import { Coach, EvalBar, Progress } from '../components/ui'
 import { ClsIcon } from '../components/ClsIcon'
 import type { GameRow, RawAnalysis } from '../analysis/core'
 import {
-  CLS_META, CLS_ORDER, KEY_CLS, classifyTry, deepAnalyze, fmtEval, isDeep, loadBook, phaseCls, reviewGame, reviewSummary, textOf, wpWhite,
+  CLS_META, CLS_ORDER, KEY_CLS, classifyTry, deepAnalyze, fmtEval, isDeep, loadBook, phaseCls, reviewGame, textOf, wpWhite,
   type Book, type Cls, type Review, type RPly,
 } from '../analysis/review'
 import { engine, type EngineLine } from '../engine/engine'
 import { es, PHASE_LABEL, pvToSan, START_FEN, tryMove, uciToMove, type Phase } from '../lib/chess-utils'
 import { db } from '../lib/db'
 import { useStore } from '../lib/store'
-import { getNodes } from '../lib/sync'
+import { getNodes, saveGameAnalysis } from '../lib/sync'
 import { go } from '../lib/router'
 
 type Full = GameRow & { id: string; analysis: RawAnalysis }
@@ -82,9 +82,9 @@ export function GameReview({ id }: { id: string }) {
     loadBook().then(setBook).catch(() => setBook({ keys: new Set(), names: new Map() }))
   }, [id])
 
-  // revisión completa con MultiPV 2 si la partida aún no la tiene
+  // análisis con el motor (MultiPV 2) si la partida aún no lo tiene o es de una versión anterior
   useEffect(() => {
-    if (!game || !analysis || isDeep(analysis)) return
+    if (!game || isDeep(analysis)) return
     const c = { cancelled: false, paused: false }
     ctl.current = c
     setDeepProg({ done: 0, total: 1 })
@@ -94,19 +94,17 @@ export function GameReview({ id }: { id: string }) {
         if (!res || c.cancelled) return
         setAnalysis(res)
         setDeepProg(null)
-        const b = await loadBook()
-        const summary = reviewSummary(reviewGame(game.pgn, game.color, res, b), game.color)
-        const stats = game.stats ? { ...game.stats, review: summary } : null
         try {
-          await db.saveAnalysis(game.id, res, stats)
-          if (stats) store.patchGame(game.id, { stats, eng: res.eng ?? null })
+          const { stats, puzzles } = await saveGameAnalysis(game, res)
+          store.patchGame(game.id, { stats, eng: res.eng ?? null, av: '2' })
+          if (puzzles) void store.reload() // ejercicios nuevos a partir de sus errores
         } catch {
           /* se queda en esta sesión; se repetirá al volver a abrirla */
         }
       })
       .catch((e) => { if (!c.cancelled) { setDeepErr((e as Error).message); setDeepProg(null) } })
     return () => { c.cancelled = true }
-  }, [game, analysis]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [game]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // el análisis de fondo se pausa mientras usas el motor para otra cosa
   useEffect(() => { ctl.current.paused = tab === 'analizar' || !!retry }, [tab, retry])
@@ -204,6 +202,20 @@ export function GameReview({ id }: { id: string }) {
   const closeLine = () => { window.clearInterval(auto.current); setLine(null) }
 
   if (err) return <div className="banner err">No se pudo abrir la partida: {err}</div>
+  if (game && !analysis) return (
+    <div className="page stack loose">
+      <div><button type="button" className="back" onClick={() => go('partidas')}><ArrowLeft size={16} />Partidas</button></div>
+      <section className="card stack" style={{ maxWidth: 560 }} aria-live="polite">
+        <h1>Analizando la partida</h1>
+        <p className="sec muted">Es la primera vez que la abres. Stockfish 17 la revisa en tu navegador; tarda unos segundos y queda guardada para la próxima vez.</p>
+        {deepProg && <>
+          <span className="sec">{deepProg.total > 1 ? `Posición ${deepProg.done} de ${deepProg.total}` : 'Preparando el motor…'}</span>
+          <Progress value={(100 * deepProg.done) / Math.max(1, deepProg.total)} />
+        </>}
+        {deepErr && <div className="banner err">No se pudo analizar ({deepErr}). Recarga la página para reintentarlo.</div>}
+      </section>
+    </div>
+  )
   if (!game || !review) return (
     <div className="page" aria-busy="true" aria-label="Cargando partida">
       <span className="sk" style={{ width: 240, height: 32 }} />

@@ -114,7 +114,7 @@ function Shell() {
             {count(n.id)}
           </button>
         ))}
-        <div className="nav-foot">{store.games.length} partidas analizadas</div>
+        <div className="nav-foot">{store.games.length} partidas</div>
       </nav>
       <main className="main" id="contenido" tabIndex={-1}>
         {store.error && (

@@ -14,6 +14,9 @@ export type GameLite = {
   termination: string | null
   stats: GameStats | null
   eng?: string | null
+  /** versión del análisis guardado; null si la partida aún no se ha analizado */
+  av?: string | null
+  opening?: string | null
 }
 
 const sum = (a: number[]) => a.reduce((s, x) => s + x, 0)

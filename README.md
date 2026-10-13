@@ -85,4 +85,4 @@ La pérdida se mide en probabilidad de ganar (fórmula de Lichess) con los mismo
 - **Oportunidad perdida**: no castigas un error del rival o dejas escapar un mate corto.
 - **Teórica**: posición del catálogo de aperturas de Lichess (CC0). **Forzada**: única jugada legal.
 
-La revisión completa analiza cada posición con Stockfish 17 y MultiPV 2 y se guarda en la partida; las nuevas ya llegan revisadas al sincronizar.
+La revisión completa analiza cada posición con Stockfish 17 y MultiPV 2 y se guarda en la partida; al sincronizar solo se guardan los datos básicos y cada partida se analiza la primera vez que la abres (métricas, revisión y ejercicios de sus errores).

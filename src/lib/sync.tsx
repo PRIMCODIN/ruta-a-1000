@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { buildPlies, computeStats, generatePuzzles, ENGINE_TAG, type GameRow, type Puzzle } from '../analysis/core'
-import { deepAnalyze, loadBook, reviewGame, reviewSummary } from '../analysis/review'
+import { loadBook, reviewGame, reviewSummary, type DeepAnalysis } from '../analysis/review'
 import { db } from './db'
 import { useStore } from './store'
 
@@ -102,6 +102,26 @@ function fromPgn(pgn: string, user: string): GameRow | null {
   }
 }
 
+/**
+ * Termina el análisis de una partida que se acaba de pasar por el motor: métricas,
+ * resumen de la revisión y, si hace falta, ejercicios a partir de sus errores. Lo guarda todo.
+ */
+export async function saveGameAnalysis(game: GameRow & { id: string }, analysis: DeepAnalysis) {
+  const plies = buildPlies(game.pgn, analysis)
+  const review = reviewSummary(reviewGame(game.pgn, game.color, analysis, await loadBook()), game.color)
+  // las métricas de las 500 partidas iniciales vienen del análisis en Python: se conservan
+  const stats = game.source === 'seed' && game.stats ? { ...game.stats, review } : { ...computeStats(game, plies), review }
+  await db.saveAnalysis(game.id, analysis, stats)
+  let puzzles = 0
+  if (!game.analysis || (game.source !== 'seed' && game.analysis.eng !== ENGINE_TAG)) {
+    const ps: Puzzle[] = await generatePuzzles(game, plies)
+    await db.deletePuzzlesOfGame(game.id)
+    if (ps.length) await db.upsertPuzzles(ps.map((p) => ({ ...p, game_id: game.id })))
+    puzzles = ps.length
+  }
+  return { stats, puzzles }
+}
+
 export function SyncProvider({ children }: { children: ReactNode }) {
   const store = useStore()
   const [st, setSt] = useState<SyncState>(idle)
@@ -115,29 +135,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       patch({ running: false, message: 'No hay partidas nuevas.' })
       return 0
     }
-    const nodes = getNodes()
-    let n = 0
-    patch({ total: todo.length, done: 0 })
-    for (const row of todo) {
-      if (cancelled.current) break
-      patch({ label: `${row.color === 'w' ? 'Blancas' : 'Negras'} · ${row.played_at.slice(0, 10)} · ${row.opening ?? ''}`, plyDone: 0, plyTotal: 0 })
-      try {
-        const analysis = (await deepAnalyze(row.pgn, nodes, (i, total) => patch({ plyDone: i, plyTotal: total })))!
-        const plies = buildPlies(row.pgn, analysis)
-        const stats = { ...computeStats(row, plies), review: reviewSummary(reviewGame(row.pgn, row.color, analysis, await loadBook()), row.color) }
-        const puzzles: Puzzle[] = await generatePuzzles(row, plies)
-        await db.upsertGames([{ ...row, analysis, stats }])
-        if (puzzles.length) {
-          const ids = await db.gameIdsByExt([row.ext_id])
-          await db.upsertPuzzles(puzzles.map((p) => ({ ...p, game_id: ids[row.ext_id] ?? null })))
-        }
-        n++
-        patch({ done: n })
-      } catch (e) {
-        if (cancelled.current) break
-        patch({ error: `Una partida no se pudo analizar (${(e as Error).message}). Sigo con las demás.` })
-      }
-    }
+    // solo los datos básicos: el análisis con el motor se hace al abrir cada partida
+    patch({ label: `Guardando ${todo.length} partida${todo.length === 1 ? '' : 's'}…`, total: 0 })
+    await db.upsertGames(todo.map((r) => ({ ...r, analysis: null, stats: null })))
+    const n = todo.length
     return n
   }, [store.games])
 
@@ -178,7 +179,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     }
     const n = await processGames(rows)
     await store.setSettings({ last_sync_at: new Date().toISOString(), chesscom_username: user })
-    return n ? `${n} partida${n === 1 ? '' : 's'} nueva${n === 1 ? '' : 's'} analizada${n === 1 ? '' : 's'}.` : 'Ya estabas al día.'
+    return n ? `${n} partida${n === 1 ? '' : 's'} nueva${n === 1 ? '' : 's'}. Cada una se analiza al abrirla.` : 'Ya estabas al día.'
   }), [run, store, processGames])
 
   const importPgnText = useCallback((text: string) => run('Leyendo PGN…', async () => {
@@ -186,7 +187,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     const rows = splitPgn(text).map((p) => fromPgn(p, user)).filter(Boolean) as GameRow[]
     if (!rows.length) throw new Error(`No encontré partidas de «${user}» en ese PGN. Revisa el usuario en Ajustes.`)
     const n = await processGames(rows)
-    return `${n} partida${n === 1 ? '' : 's'} importada${n === 1 ? '' : 's'}.`
+    return `${n} partida${n === 1 ? '' : 's'} importada${n === 1 ? '' : 's'}. Cada una se analiza al abrirla.`
   }), [run, store, processGames])
 
   const importSeed = useCallback(() => run('Importando tus 500 partidas analizadas…', async () => {
@@ -210,43 +211,23 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }), [run, store])
 
   /**
-   * Mantenimiento automático: recalcula las métricas antiguas (v<3) y vuelve a analizar
-   * con el motor actual las partidas nuevas analizadas con un motor anterior.
+   * Mantenimiento automático: recalcula las métricas antiguas (v<3) de las partidas ya analizadas.
+   * No usa el motor: el reanálisis de cada partida se hace al abrirla.
    */
   const upgradeTried = useRef(false)
   useEffect(() => {
     if (store.loading || upgradeTried.current || st.running || !store.games.length) return
     upgradeTried.current = true
-    const reanalyze = store.games.filter((g) => g.source !== 'seed' && g.eng !== ENGINE_TAG).map((g) => g.id)
-    const restat = store.games.filter((g) => (!g.stats || g.stats.v < 3) && !reanalyze.includes(g.id)).map((g) => g.id)
-    if (!reanalyze.length && !restat.length) return
-    void run('Actualizando tus análisis…', async () => {
-      const nodes = getNodes()
-      let fixed = 0
+    const restat = store.games.filter((g) => g.av && (!g.stats || g.stats.v < 3)).map((g) => g.id)
+    if (!restat.length) return
+    void run('Actualizando tus métricas…', async () => {
       for (let i = 0; i < restat.length; i += 100) {
         if (cancelled.current) break
         patch({ label: `Recalculando métricas (${Math.min(i + 100, restat.length)} de ${restat.length})…`, total: 0 })
-        const rows = await db.gamesFull(restat.slice(i, i + 100))
+        const rows = (await db.gamesFull(restat.slice(i, i + 100))).filter((r) => r.analysis)
         await db.upsertGames(rows.map((r) => ({ ...r, stats: { ...computeStats(r, buildPlies(r.pgn, r.analysis!)), review: r.stats?.review } })))
       }
-      if (restat.length) await store.reload() // «Mi apertura» ya puede usar las métricas nuevas
-      patch({ total: reanalyze.length, done: 0 })
-      for (const id of reanalyze) {
-        if (cancelled.current) break
-        const [row] = await db.gamesFull([id])
-        if (!row) continue
-        patch({ label: `Reanalizando con Stockfish 17 · ${row.played_at.slice(0, 10)}`, plyDone: 0, plyTotal: 0 })
-        const analysis = (await deepAnalyze(row.pgn, nodes, (k, total) => patch({ plyDone: k, plyTotal: total })))!
-        const plies = buildPlies(row.pgn, analysis)
-        const stats = { ...computeStats(row, plies), review: reviewSummary(reviewGame(row.pgn, row.color, analysis, await loadBook()), row.color) }
-        const puzzles = await generatePuzzles(row, plies)
-        await db.upsertGames([{ ...row, analysis, stats }])
-        await db.deletePuzzlesOfGame(id)
-        if (puzzles.length) await db.upsertPuzzles(puzzles.map((p) => ({ ...p, game_id: id })))
-        fixed++
-        patch({ done: fixed })
-      }
-      return fixed ? `${fixed} partida${fixed === 1 ? '' : 's'} reanalizada${fixed === 1 ? '' : 's'} con Stockfish 17.` : 'Métricas actualizadas.'
+      return 'Métricas actualizadas.'
     })
   }, [store.loading, store.games]) // eslint-disable-line react-hooks/exhaustive-deps
 
