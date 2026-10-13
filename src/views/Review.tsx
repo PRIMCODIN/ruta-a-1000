@@ -7,7 +7,7 @@ import { Coach, EvalBar, Progress } from '../components/ui'
 import { ClsIcon } from '../components/ClsIcon'
 import type { GameRow, RawAnalysis } from '../analysis/core'
 import {
-  CLS_META, CLS_ORDER, KEY_CLS, classifyTry, deepAnalyze, fmtEval, isDeep, loadBook, phaseCls, reviewGame, textOf, wpWhite,
+  CLS_META, CLS_ORDER, KEY_CLS, classifyTry, deepAnalyze, estElo, fmtEval, isDeep, loadBook, phaseCls, reviewGame, textOf, wpWhite,
   type Book, type Cls, type Review, type RPly,
 } from '../analysis/review'
 import { engine, type EngineLine } from '../engine/engine'
@@ -486,6 +486,10 @@ function Summary({ review, me, onPick, onStart }: { review: Review; me: Color; o
               <span className="meta">{review.players[c].name}{c === me ? ' (tú)' : ''}</span>
               <span className="acc-big num">{review.acc[c].toFixed(1).replace('.', ',')}</span>
               <span className="meta">Precisión</span>
+              {(() => {
+                const e = estElo(review.acc[c], c, Number(review.players[c].elo) || null, review.plies.length)
+                return e ? <span className="acc-elo num" title="Elo aproximado al que se jugó esta partida, según la precisión y el Elo de cada uno. Una sola partida varía mucho.">≈ {e} <span className="meta">Elo en esta partida</span></span> : null
+              })()}
             </div>
           ))}
         </div>

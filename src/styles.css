@@ -421,6 +421,8 @@ td.empty-row { text-align: center; color: var(--muted); padding: var(--s6) var(-
 .acc-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin-bottom: var(--s3); }
 .acc-box { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--s3); border-radius: var(--r); background: var(--panel-2); text-align: center; min-width: 0; }
 .acc-box .meta { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-elo { margin-top: var(--s2); font-weight: 600; }
+.acc-elo .meta { font-weight: 400; }
 .acc-box.me { box-shadow: inset 0 0 0 1px var(--accent-line); }
 .acc-big { font-size: var(--fs-h1); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
 .cls-table td, .cls-table th { padding: 6px var(--s2); }

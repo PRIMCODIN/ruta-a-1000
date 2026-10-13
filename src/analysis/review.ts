@@ -459,6 +459,49 @@ export function reviewGame(pgn: string, me: Color, a: RawAnalysis, book: Book | 
   return review
 }
 
+/* ------------------------------------------------------------------ */
+/* Elo estimado por partida                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Precisión media por Elo en Chess.com (blitz 5+0 y rápidas 10+0), del estudio
+ * «Accuracy and ratings on Chess.com» (blog de hissha). Entre puntos se interpola en línea recta.
+ */
+const ELO_ACC: [number, number][] = [[400, 68.5], [1000, 76.3], [1600, 80.3], [1800, 81.7], [2000, 83.4], [2200, 85.0], [2400, 87.5], [2800, 90.0]]
+/** nuestra precisión (fórmula de Lichess) sale unos 2,3 puntos más alta que la de Chess.com: calibrado con tus 500 partidas */
+const ACC_OFFSET = 2.3
+/** cuánto pesa la partida frente al Elo que ya tenías: una sola partida es muy ruidosa */
+const PERF_WEIGHT = 0.4
+const PERF_CAP = 500
+
+function lerp(x: number, pts: [number, number][], xi: 0 | 1) {
+  const yi = xi ? 0 : 1
+  const n = pts.length
+  let k = 0
+  while (k < n - 2 && x > pts[k + 1][xi]) k++
+  const [a, b] = [pts[k], pts[k + 1]]
+  return a[yi] + ((x - a[xi]) * (b[yi] - a[yi])) / (b[xi] - a[xi])
+}
+const accToElo = (acc: number) => lerp(acc, ELO_ACC, 1)
+
+/**
+ * Elo aproximado al que jugó cada lado en una partida, como el «Game Rating» de Chess.com.
+ * Mezcla lo que dice la precisión con el Elo del jugador (si se conoce) para que una partida
+ * corta o un error del rival no den cifras absurdas. null si la partida es demasiado corta.
+ */
+export function estElo(acc: number, color: Color, rating: number | null | undefined, plies: number): number | null {
+  if (plies < 20 || !acc) return null
+  // las blancas sacan ~1,1 puntos más de precisión de media
+  const a = acc + (color === 'w' ? -0.56 : 0.56) - ACC_OFFSET
+  const raw = accToElo(a)
+  let e = raw
+  if (rating && rating > 0) {
+    e = rating + PERF_WEIGHT * (raw - rating)
+    e = Math.max(rating - PERF_CAP, Math.min(rating + PERF_CAP, e))
+  }
+  return Math.round(Math.max(100, Math.min(3000, e)) / 10) * 10
+}
+
 export type ReviewSummary = { acc: number; oacc: number; c: Partial<Record<Cls, number>> }
 
 export function reviewSummary(r: Review, me: Color): ReviewSummary {

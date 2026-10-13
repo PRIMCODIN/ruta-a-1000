@@ -86,3 +86,7 @@ La pérdida se mide en probabilidad de ganar (fórmula de Lichess) con los mismo
 - **Teórica**: posición del catálogo de aperturas de Lichess (CC0). **Forzada**: única jugada legal.
 
 La revisión completa analiza cada posición con Stockfish 17 y MultiPV 2 y se guarda en la partida; al sincronizar solo se guardan los datos básicos y cada partida se analiza la primera vez que la abres (métricas, revisión y ejercicios de sus errores).
+
+### Elo en la partida
+
+Cada revisión estima a qué Elo jugó cada lado, al estilo del «Game Rating» de Chess.com. Parte de la tabla de precisión media por Elo publicada en [«Accuracy and ratings on Chess.com»](https://chess.com/blog/hissha/accuracy-and-ratings-on-chess-com), corrige 2,3 puntos porque la precisión de Lichess sale algo más alta (calibrado con las 500 partidas iniciales) y ±0,56 por el color. Como una sola partida es muy ruidosa, el resultado se mezcla con el Elo real del jugador (40 % partida, 60 % Elo) y no se aleja más de 500 puntos de él. No se calcula en partidas de menos de 20 jugadas.

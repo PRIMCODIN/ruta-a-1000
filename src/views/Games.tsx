@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Icons } from '../components/ui'
 import { ClsIcon } from '../components/ClsIcon'
+import { estElo } from '../analysis/review'
 import { UploadSimple } from '@phosphor-icons/react'
 import { useStore } from '../lib/store'
 import { useSync } from '../lib/sync'
@@ -66,7 +67,7 @@ export default function Games() {
       </div>
       <div className="card table-wrap pad-s">
         <table className="t">
-          <thead><tr><th>Res.</th><th>Fecha</th><th>Color</th><th>Ritmo</th><th>Elo</th><th>Precisión</th><th>Errores graves</th><th>Revisión</th><th>Apertura</th></tr></thead>
+          <thead><tr><th>Res.</th><th>Fecha</th><th>Color</th><th>Ritmo</th><th>Elo</th><th>Precisión</th><th title="Elo aproximado al que jugaste esa partida (según la revisión)">Elo en la partida</th><th>Errores graves</th><th>Revisión</th><th>Apertura</th></tr></thead>
           <tbody>
             {list.slice(0, n).map((g) => {
               const b = g.stats ? g.stats.blunders.apertura + g.stats.blunders.medio + g.stats.blunders.final : null
@@ -77,7 +78,8 @@ export default function Games() {
                   <td><span className="row" style={{ gap: 6, flexWrap: 'nowrap' }}><span className={`sw-dot ${g.color}`} aria-hidden="true" />{g.color === 'w' ? 'Blancas' : 'Negras'}</span></td>
                   <td className="num">{fmtTc(g.time_control)}</td>
                   <td className="num">{g.my_elo ?? '-'} <span className="dim">vs {g.opp_elo ?? '-'}</span></td>
-                  <td className="num">{g.stats ? `${g.stats.accuracy.toFixed(0)}%` : '-'}</td>
+                  <td className="num">{g.stats ? `${(g.stats.review?.acc ?? g.stats.accuracy).toFixed(0)}%` : '-'}</td>
+                  <td className="num">{(() => { const r = g.stats?.review; const e = r ? estElo(r.acc, g.color, g.my_elo, g.stats!.plies) : null; return e ? <span style={{ color: g.my_elo && e >= g.my_elo ? 'var(--good)' : undefined }}>≈ {e}</span> : <span className="dim">-</span> })()}</td>
                   <td className="num" style={{ color: b == null ? undefined : b ? 'var(--bad)' : 'var(--good)' }}>{b ?? '-'}</td>
                   <td><ReviewBadges g={g} /></td>
                   <td className="ellipsis">{g.stats?.bucket.replace(/^(Blancas|Negras) · /, '').replace('—', '') ?? g.opening ?? ''}</td>
